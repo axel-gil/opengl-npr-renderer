@@ -3,6 +3,7 @@
 // Interpolated values from vertex shader
 in vec3 frag_normal;
 in vec3 frag_pos_cam;
+in vec3 output_color;
 
 // Uniforms uploaded by init_POV()
 uniform vec3 object_color; // base diffuse color of the object
@@ -42,5 +43,5 @@ void main()
     // Combine all three lighting components
     vec3 color = ambient + diffuse + 0.5 * specular;
 
-    frag_color = vec4(color, 1.0);
+    frag_color = vec4(output_color, 1.0);
 }

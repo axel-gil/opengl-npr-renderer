@@ -6,6 +6,9 @@ in vec3 position;
 // Per-vertex normal from VBO (in world space)
 in vec3 normal;
 
+// Per-vertex colo from VBO
+in vec3 vertex_color;
+
 // Matrices uploaded by init_POV()
 uniform mat4 model_view;   // world -> camera space
 uniform mat4 projection;   // camera space -> clip space
@@ -14,6 +17,7 @@ uniform mat4 projection;   // camera space -> clip space
 // 'out' variables are interpolated across the triangle's surface automatically.
 out vec3 frag_normal;
 out vec3 frag_pos_cam; // position in camera space (used to compute view direction)
+out vec3 output_color;
 
 void main()
 {
@@ -28,4 +32,5 @@ void main()
 
     // Final clip-space position (what OpenGL actually uses for rasterization)
     gl_Position = projection * pos_cam;
+    output_color = vertex_color;
 }
