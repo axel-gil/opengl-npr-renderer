@@ -1,10 +1,7 @@
 #pragma once
 #include "matrix4.hh"
-#ifdef __APPLE__
-#include <OpenGL/gl3.h>
-#else
-#include <GL/gl.h>
-#endif
+
+#include <GL/glew.h>
 
 namespace mygl
 {
