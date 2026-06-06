@@ -7,10 +7,8 @@ else
 CC = g++
 endif
 
-SRCS = image.cc  image_io.cc matrix4.cc transformation.cc
-HXX_FILES = image.hh  image_io.hh
-HXX_FILES += object_vbo.hh
-OBJ = $(SRCS:.cc=.o)
+SRC = image.cc  image_io.cc matrix4.cc transformation.cc program.cc
+OBJ = $(SRC:.cc=.o)
 
 CXXFLAGS += -Wall -Wextra -O3 -g -std=c++11
 CXXFLAGS += -m64 -march=native

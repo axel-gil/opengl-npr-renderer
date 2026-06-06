@@ -20,6 +20,7 @@
 #include "matrix4.hh"
 #include "transformation.hh"
 #include "object_vbo.hh"
+#include "program.hh"
 
 // #define SAVE_RENDER
 // #if defined(SAVE_RENDER)
@@ -38,7 +39,6 @@
 
 // Globals
 GLuint vao_id;
-GLuint program_id;
 GLFWwindow* window;
 
 /*
@@ -58,7 +58,6 @@ std::vector<GLfloat> normal_buffer_data = {
     0,       -1,      0,        0,       -1,      0,        0,
     -1,      0,       0,        -1,      0,
 }; */
-
 
 // Glut window_resize function
 void window_resize(int width, int height)
@@ -102,155 +101,35 @@ void init_GL()
     TEST_OPENGL_ERROR();
 }
 
-// Get file content as string
-std::string load(const std::string& filename)
-{
-    // Create a inputfile stream
-    std::ifstream f(filename, std::ios::in);
-    if (f.fail())
-    {
-        std::cerr << "Cannot load: " << filename << std::endl;
-        return "";
-    }
-
-    // Get each lines in a string
-    std::string content;
-    std::string line;
-    while (getline(f, line))
-        content += line + "\n";
-    content += '\0';
-    return content;
-}
-
-// Compiles the shader
-bool load_and_compile_shader(const GLenum shader_type,
-                             const std::string& filename, GLuint& shader_id)
-{
-    // Load the file content
-    std::string src = load(filename);
-    const GLchar* sources[] = { src.c_str() };
-    const GLint lens[] = { static_cast<GLint>(src.size()) };
-
-    // Create a shader of type shader_type
-    shader_id = glCreateShader(shader_type);
-    TEST_OPENGL_ERROR();
-
-    // Loads sources in the shader
-    glShaderSource(shader_id, 1, sources, lens);
-    TEST_OPENGL_ERROR();
-
-    // Compiles the shader
-    glCompileShader(shader_id);
-
-    // Get the GL_COMPILE_STATUS parameter
-    GLint status;
-    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &status);
-    if (status != GL_TRUE)
-    {
-        // Get the GL_INFO_LOG_LENGTH
-        GLint log_size;
-        glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &log_size);
-
-        // Allocate a string for the logs, fetch and display them
-        char* log = (char*)std::malloc(log_size + 1);
-        glGetShaderInfoLog(shader_id, log_size, &log_size, log);
-        std::cerr << "Shader compile error (" << filename << "): " << log
-                  << std::endl;
-        std::free(log);
-
-        // Remove the shader
-        glDeleteShader(shader_id);
-        return false;
-    }
-    return true;
-}
-
-// Link the shaders to a program
-bool attach_and_link_program(const std::vector<GLuint>& shaders, GLuint& prog)
-{
-    // Create the program
-    prog = glCreateProgram();
-    TEST_OPENGL_ERROR();
-
-    for (auto s : shaders)
-    {
-        // Add the shaders to the program
-        glAttachShader(prog, s);
-        TEST_OPENGL_ERROR();
-    }
-
-    // Link the shaders attached to the program
-    // GL_VERTEX_SHADER is used to create an executable that will run on the
-    // vertex processor
-    // GL_FRAGMENT_SHADER is used create an executable that will run on fragment
-    // processor
-    glLinkProgram(prog);
-    TEST_OPENGL_ERROR();
-
-    // Get the GL_LINK_STATUS
-    GLint status;
-    glGetProgramiv(prog, GL_LINK_STATUS, &status);
-    if (status != GL_TRUE)
-    {
-        // Get the GL_INFO_LOG_LENGTH
-        GLint log_size;
-        glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &log_size);
-
-        // Allocate a string for the logs, fetch and display them
-        char* log = (char*)std::malloc(log_size + 1);
-        glGetProgramInfoLog(prog, log_size, &log_size, log);
-        std::cerr << "Program link error: " << log << std::endl;
-        std::free(log);
-
-        // Remove the shader
-        glDeleteProgram(prog);
-        prog = 0;
-        return false;
-    }
-    return true;
-}
-
 // Init the shaders
-bool init_shaders()
+bool init_shaders(mygl::program** p)
 {
-    GLuint vert_id;
-    GLuint frag_id;
-
-    // Loads the differents shaders
-    if (!load_and_compile_shader(GL_VERTEX_SHADER, "vertex.glsl", vert_id))
-        return false;
-    if (!load_and_compile_shader(GL_FRAGMENT_SHADER, "fragment.glsl", frag_id))
-        return false;
-
-    // List the shaders and links them to a program
-    std::vector<GLuint> shaders = { vert_id, frag_id };
-    if (!attach_and_link_program(shaders, program_id))
-        return false;
-
-    for (auto s : shaders)
-    {
-        // Then detach the shader from the program
-        glDetachShader(program_id, s);
-        TEST_OPENGL_ERROR();
-
-        // Then delete the shader
-        glDeleteShader(s);
-        TEST_OPENGL_ERROR();
-    }
+    mygl::program* program =
+        mygl::program::makeprogram("vertex.glsl", "fragment.glsl");
+    *p = program;
 
     // Use the program in the rendering state
-    glUseProgram(program_id);
-    TEST_OPENGL_ERROR();
+    if (program->is_ready())
+    {
+        program->use();
+        TEST_OPENGL_ERROR();
+    }
+    else
+    {
+        std::cerr << program->get_log();
+        return false;
+    }
+
     return true;
 }
 
 // Init the global
-bool init_object()
+bool init_object(const mygl::program* p)
 {
     // Get the get the location in the program of a named attribute here
     // position
     // return -1 if name is not an active attribute (not found)
-    GLint vertex_location = glGetAttribLocation(program_id, "position");
+    GLint vertex_location = glGetAttribLocation(p->program_id, "position");
     TEST_OPENGL_ERROR();
     if (vertex_location == -1)
     {
@@ -258,7 +137,7 @@ bool init_object()
         return false;
     }
 
-    GLint normal_location = glGetAttribLocation(program_id, "normal");
+    GLint normal_location = glGetAttribLocation(p->program_id, "normal");
     TEST_OPENGL_ERROR();
     if (normal_location == -1)
     {
@@ -328,7 +207,7 @@ bool init_object()
     return true;
 }
 
-bool init_POV()
+bool init_POV(const mygl::program* p)
 {
     mygl::Matrix4 view =
         mygl::lookat(0.0f, 1.5f, -4.0f, 1.0f, 1.5f, 0.0f, 0.0f, 1.0f, 0.0f);
@@ -337,10 +216,10 @@ bool init_POV()
 
     // Get the uniformLocation in the program with a named uniform variable
     // Return -1 if the variable doesn't exist
-    GLint view_loc = glGetUniformLocation(program_id, "model_view");
+    GLint view_loc = glGetUniformLocation(p->program_id, "model_view");
     TEST_OPENGL_ERROR();
 
-    GLint proj_loc = glGetUniformLocation(program_id, "projection");
+    GLint proj_loc = glGetUniformLocation(p->program_id, "projection");
     TEST_OPENGL_ERROR();
 
     if (view_loc == -1)
@@ -358,7 +237,7 @@ bool init_POV()
     TEST_OPENGL_ERROR();
 
     // Get the light direction
-    GLint light_loc = glGetUniformLocation(program_id, "light_dir");
+    GLint light_loc = glGetUniformLocation(p->program_id, "light_dir");
     TEST_OPENGL_ERROR();
     if (light_loc == -1)
     {
@@ -408,11 +287,13 @@ int main(int argc, char* argv[])
     // Set global rendering state
     init_GL();
 
-    if (!init_shaders())
+    mygl::program* p = nullptr;
+
+    if (!init_shaders(&p))
         return 1;
-    if (!init_object())
+    if (!init_object(p))
         return 1;
-    if (!init_POV())
+    if (!init_POV(p))
         return 1;
 
     while (!glfwWindowShouldClose(window))
@@ -426,7 +307,7 @@ int main(int argc, char* argv[])
         TEST_OPENGL_ERROR();
 
         // Get the uniformLocation of object_color
-        GLint color_loc = glGetUniformLocation(program_id, "object_color");
+        GLint color_loc = glGetUniformLocation(p->program_id, "object_color");
         TEST_OPENGL_ERROR();
         if (color_loc == -1)
         {
@@ -434,7 +315,8 @@ int main(int argc, char* argv[])
         }
 
         // Upload a warm color fot the object
-        // This variable is used for the object as a fiffuse color in the lighting
+        // This variable is used for the object as a fiffuse color in the
+        // lighting
         glUniform3f(color_loc, 0.95f, 0.4f, 0.f);
         TEST_OPENGL_ERROR();
 
@@ -451,7 +333,8 @@ int main(int argc, char* argv[])
         glfwPollEvents();
     }
 
+    delete p;
     glfwTerminate();
-    // glutMainLoop();
+
     return 0;
 }
