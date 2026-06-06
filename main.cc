@@ -106,7 +106,7 @@ void init_GL()
 bool init_shaders(mygl::program** p)
 {
     mygl::program* program =
-        mygl::program::makeprogram("vertex.glsl", "fragment.glsl");
+        mygl::program::makeprogram("vertex.shd", "fragment.shd");
     *p = program;
 
     // Use the program in the rendering state
@@ -146,6 +146,22 @@ bool init_object(const mygl::program* p)
         return false;
     }
 
+    GLint color_location = glGetAttribLocation(p->program_id, "color");
+    TEST_OPENGL_ERROR();
+    if (color_location == -1)
+    {
+        std::cerr << "Attribute 'color' not found in shader" << std::endl;
+        return false;
+    }
+
+    GLint texture_location = glGetAttribLocation(p->program_id, "uv");
+    TEST_OPENGL_ERROR();
+    if (color_location == -1)
+    {
+        std::cerr << "Attribute 'uv' not found in shader" << std::endl;
+        return false;
+    }
+
     // Generate 1 vertex array
     // The name is stored in vao_id (global variable)
     GLuint vbo_ids[4];
@@ -157,9 +173,9 @@ bool init_object(const mygl::program* p)
     glBindVertexArray(vao_id);
     TEST_OPENGL_ERROR();
 
-    // Generate 2 VBO
+    // Generate 4 VBO
     // One for the normal and the other for the positions
-    glGenBuffers(2, vbo_ids);
+    glGenBuffers(4, vbo_ids);
     TEST_OPENGL_ERROR();
 
     // Bind the first VBO as the active one for GL_ARRAY_BUFFER operations
@@ -201,6 +217,38 @@ bool init_object(const mygl::program* p)
 
     // Enable the attribute VBO for the position attribute
     glEnableVertexAttribArray(normal_location);
+    TEST_OPENGL_ERROR();
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_ids[2]);
+    TEST_OPENGL_ERROR();
+
+    // Upload the CPU vector in GPU memory while giving GL_STATIC_DRAW
+    glBufferData(GL_ARRAY_BUFFER, color_buffer_data.size() * sizeof(GLfloat),
+                 color_buffer_data.data(), GL_STATIC_DRAW);
+    TEST_OPENGL_ERROR();
+
+    // How to read in the normal_location
+    glVertexAttribPointer(color_location, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    TEST_OPENGL_ERROR();
+
+    // Enable the attribute VBO for the position attribute
+    glEnableVertexAttribArray(color_location);
+    TEST_OPENGL_ERROR();
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_ids[3]);
+    TEST_OPENGL_ERROR();
+
+    // Upload the CPU vector in GPU memory while giving GL_STATIC_DRAW
+    glBufferData(GL_ARRAY_BUFFER, texture_buffer_data.size() * sizeof(GLfloat),
+                 texture_buffer_data.data(), GL_STATIC_DRAW);
+    TEST_OPENGL_ERROR();
+
+    // How to read in the normal_location
+    glVertexAttribPointer(texture_location, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    TEST_OPENGL_ERROR();
+
+    // Enable the attribute VBO for the position attribute
+    glEnableVertexAttribArray(texture_location);
     TEST_OPENGL_ERROR();
 
     // Unbind the VAO while setting 0 (nothing)
@@ -284,18 +332,18 @@ void display(const mygl::program* p)
     TEST_OPENGL_ERROR();
 
     // Get the uniformLocation of object_color
-    GLint color_loc = glGetUniformLocation(p->program_id, "object_color");
-    TEST_OPENGL_ERROR();
-    if (color_loc == -1)
-    {
-        std::cerr << "Uniform 'color_location' not found" << std::endl;
-    }
+    // GLint color_loc = glGetUniformLocation(p->program_id, "object_color");
+    // TEST_OPENGL_ERROR();
+    // if (color_loc == -1)
+    // {
+    //     std::cerr << "Uniform 'color_location' not found" << std::endl;
+    // }
 
-    // Upload a warm color fot the object
-    // This variable is used for the object as a fiffuse color in the
-    // lighting
-    glUniform3f(color_loc, 0.95f, 0.4f, 0.f);
-    TEST_OPENGL_ERROR();
+    // // Upload a warm color fot the object
+    // // This variable is used for the object as a fiffuse color in the
+    // // lighting
+    // glUniform3f(color_loc, 0.95f, 0.4f, 0.f);
+    // TEST_OPENGL_ERROR();
 
     // Set primitives
     glDrawArrays(GL_TRIANGLES, 0, vertex_buffer_data.size() / 3);
@@ -317,7 +365,7 @@ bool load_obj(const std::string& path)
 
     tinyobj::ObjReader reader;
 
-    if (!reader.ParseFromFile(path))
+    if (!reader.ParseFromFile(path, reader_config))
     {
         if (!reader.Error().empty())
             std::cerr << "TinyObjReader error: " << reader.Error();
