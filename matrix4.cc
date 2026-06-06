@@ -1,5 +1,4 @@
 #include "matrix4.hh"
-#include <GL/gl.h>
 #include <iomanip>
 #include <vector>
 

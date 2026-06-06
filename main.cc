@@ -5,16 +5,21 @@
 /*                                                                      */
 /************************************************************************/
 
+#ifdef __APPLE__
+#    define GL_SILENCE_DEPRECATION
+#endif
+
 #include <GL/glew.h>
-#include <GL/freeglut.h>
+#include <GLFW/glfw3.h>
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 
-#include "object_vbo.hh"
 #include "matrix4.hh"
 #include "transformation.hh"
+#include "object_vbo.hh"
 
 // #define SAVE_RENDER
 // #if defined(SAVE_RENDER)
@@ -34,6 +39,7 @@
 // Globals
 GLuint vao_id;
 GLuint program_id;
+GLFWwindow* window;
 
 /*
 std::vector<GLfloat> vertex_buffer_data = {
@@ -53,41 +59,6 @@ std::vector<GLfloat> normal_buffer_data = {
     -1,      0,       0,        -1,      0,
 }; */
 
-// Glut display function
-void display()
-{
-    // Clear the color and the depth
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    TEST_OPENGL_ERROR();
-
-    // Activate the VAO
-    glBindVertexArray(vao_id);
-    TEST_OPENGL_ERROR();
-
-    // Get the uniformLocation of object_color
-    GLint color_loc = glGetUniformLocation(program_id, "object_color");
-    TEST_OPENGL_ERROR();
-    if (color_loc == -1)
-    {
-        std::cerr << "Uniform 'color_location' not found" << std::endl;
-    }
-
-    // Upload a warm color fot the object
-    // This variable is used for the object as a fiffuse color in the lighting
-    glUniform3f(color_loc, 0.95f, 0.4f, 0.f);
-    TEST_OPENGL_ERROR();
-
-    // Set primitives
-    glDrawArrays(GL_TRIANGLES, 0, vertex_buffer_data.size() / 3);
-    TEST_OPENGL_ERROR();
-
-    // Unbind the VAO
-    glBindVertexArray(0);
-    TEST_OPENGL_ERROR();
-
-    // Swaps the buffers
-    glutSwapBuffers();
-}
 
 // Glut window_resize function
 void window_resize(int width, int height)
@@ -95,45 +66,6 @@ void window_resize(int width, int height)
     // std::cout << "glViewport(0,0,"<< width << "," << height <<
     // ");TEST_OPENGL_ERROR();" << std::endl;
     glViewport(0, 0, width, height);
-    TEST_OPENGL_ERROR();
-}
-
-// Glut initialization
-void init_glut(int& argc, char* argv[])
-{
-    // Init glut with main argc
-    glutInit(&argc, argv);
-
-    // Init the version of OpenGL
-    glutInitContextVersion(4, 5);
-
-    // Authorize only new OpenGL functions not the deprecared ones
-    // GLUT_DEBUG adds extra errors reports
-    glutInitContextProfile(GLUT_CORE_PROFILE | GLUT_DEBUG);
-
-    // Allow
-    // GLUT_RGBA : RGBA rendering
-    // GLUT_DOUBLE : double buffering
-    // GLUT_DEPTH : z buffer
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-
-    // Init window size
-    glutInitWindowSize(1024, 1024);
-
-    // Init window position
-    // glutInitWindowPosition(100, 100);
-    // TEST_OPENGL_ERROR();
-
-    // Window name
-    glutCreateWindow("Shader Programming");
-    TEST_OPENGL_ERROR();
-
-    // Add the display function called before rendering
-    glutDisplayFunc(display);
-    TEST_OPENGL_ERROR();
-
-    // Add the window_resize called when the window is reshaped
-    glutReshapeFunc(window_resize);
     TEST_OPENGL_ERROR();
 }
 
@@ -440,10 +372,34 @@ bool init_POV()
     return true;
 }
 
+bool init_GLFW()
+{
+    if (!glfwInit())
+        return false;
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // required on macOS
+
+    window = glfwCreateWindow(1024, 1024, "TestOpenGL", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        return false;
+    }
+
+    glfwMakeContextCurrent(window);
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
     // Create GL window and context
-    init_glut(argc, argv);
+    // init_glut(argc, argv);
+    (void)argc;
+    (void)argv;
+    init_GLFW();
 
     // Loads GL functions pointers
     if (!init_glew())
@@ -458,6 +414,44 @@ int main(int argc, char* argv[])
         return 1;
     if (!init_POV())
         return 1;
-    glutMainLoop();
+
+    while (!glfwWindowShouldClose(window))
+    {
+        // Clear the color and the depth
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        TEST_OPENGL_ERROR();
+
+        // Activate the VAO
+        glBindVertexArray(vao_id);
+        TEST_OPENGL_ERROR();
+
+        // Get the uniformLocation of object_color
+        GLint color_loc = glGetUniformLocation(program_id, "object_color");
+        TEST_OPENGL_ERROR();
+        if (color_loc == -1)
+        {
+            std::cerr << "Uniform 'color_location' not found" << std::endl;
+        }
+
+        // Upload a warm color fot the object
+        // This variable is used for the object as a fiffuse color in the lighting
+        glUniform3f(color_loc, 0.95f, 0.4f, 0.f);
+        TEST_OPENGL_ERROR();
+
+        // Set primitives
+        glDrawArrays(GL_TRIANGLES, 0, vertex_buffer_data.size() / 3);
+        TEST_OPENGL_ERROR();
+
+        // Unbind the VAO
+        glBindVertexArray(0);
+        TEST_OPENGL_ERROR();
+
+        // Swaps the buffers
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    glfwTerminate();
+    // glutMainLoop();
     return 0;
 }

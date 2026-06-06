@@ -1,4 +1,4 @@
-#version 450 core
+#version 410 core
 
 // Interpolated values from vertex shader
 in vec3 frag_normal;

@@ -1,4 +1,4 @@
-#version 450 core
+#version 410 core
 
 // Per-vertex position from VBO (in object/world space)
 in vec3 position;
