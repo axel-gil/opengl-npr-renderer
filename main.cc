@@ -1,10 +1,3 @@
-/************************************************************************/
-/*                                                                      */
-/* (c) J. Fabrizio                                                      */
-/*                                                                      */
-/*                                                                      */
-/************************************************************************/
-
 #ifdef __APPLE__
 #    define GL_SILENCE_DEPRECATION
 #endif
@@ -19,8 +12,11 @@
 
 #include "matrix4.hh"
 #include "transformation.hh"
-#include "object_vbo.hh"
+// #include "object_vbo.hh"
 #include "program.hh"
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.hh"
 
 // #define SAVE_RENDER
 // #if defined(SAVE_RENDER)
@@ -40,6 +36,11 @@
 // Globals
 GLuint vao_id;
 GLFWwindow* window;
+
+std::vector<GLfloat> vertex_buffer_data;
+std::vector<GLfloat> normal_buffer_data;
+std::vector<GLfloat> texture_buffer_data;
+std::vector<GLfloat> color_buffer_data;
 
 /*
 std::vector<GLfloat> vertex_buffer_data = {
@@ -147,7 +148,7 @@ bool init_object(const mygl::program* p)
 
     // Generate 1 vertex array
     // The name is stored in vao_id (global variable)
-    GLuint vbo_ids[2];
+    GLuint vbo_ids[4];
     glGenVertexArrays(1, &vao_id);
     TEST_OPENGL_ERROR();
 
@@ -272,12 +273,146 @@ bool init_GLFW()
     return true;
 }
 
+void display(const mygl::program* p)
+{
+    // Clear the color and the depth
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    TEST_OPENGL_ERROR();
+
+    // Activate the VAO
+    glBindVertexArray(vao_id);
+    TEST_OPENGL_ERROR();
+
+    // Get the uniformLocation of object_color
+    GLint color_loc = glGetUniformLocation(p->program_id, "object_color");
+    TEST_OPENGL_ERROR();
+    if (color_loc == -1)
+    {
+        std::cerr << "Uniform 'color_location' not found" << std::endl;
+    }
+
+    // Upload a warm color fot the object
+    // This variable is used for the object as a fiffuse color in the
+    // lighting
+    glUniform3f(color_loc, 0.95f, 0.4f, 0.f);
+    TEST_OPENGL_ERROR();
+
+    // Set primitives
+    glDrawArrays(GL_TRIANGLES, 0, vertex_buffer_data.size() / 3);
+    TEST_OPENGL_ERROR();
+
+    // Unbind the VAO
+    glBindVertexArray(0);
+    TEST_OPENGL_ERROR();
+
+    // Swaps the buffers
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+}
+
+bool load_obj(const std::string& path)
+{
+    tinyobj::ObjReaderConfig reader_config;
+    reader_config.mtl_search_path = "./"; // Path to material files
+
+    tinyobj::ObjReader reader;
+
+    if (!reader.ParseFromFile(path))
+    {
+        if (!reader.Error().empty())
+            std::cerr << "TinyObjReader error: " << reader.Error();
+        return false;
+    }
+
+    if (!reader.Warning().empty())
+        std::cerr << "TinyObjReader warning: " << reader.Warning();
+
+    const auto& attrib = reader.GetAttrib();
+    const auto& shapes = reader.GetShapes();
+
+    vertex_buffer_data.clear();
+    normal_buffer_data.clear();
+
+    for (const auto& shape : shapes)
+    {
+        size_t index_offset = 0;
+
+        for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++)
+        {
+            int fv = shape.mesh.num_face_vertices[f]; // 3 or 4 (or more)
+
+            // Fan triangulation: triangle = (0, v, v+1) for v in [1, fv-2]
+            for (int v = 1; v <= fv - 2; v++)
+            {
+                for (int corner : { 0, v, v + 1 })
+                {
+                    tinyobj::index_t idx =
+                        shape.mesh.indices[index_offset + corner];
+
+                    // Position
+                    vertex_buffer_data.push_back(
+                        attrib.vertices[3 * idx.vertex_index + 0]);
+                    vertex_buffer_data.push_back(
+                        attrib.vertices[3 * idx.vertex_index + 1]);
+                    vertex_buffer_data.push_back(
+                        attrib.vertices[3 * idx.vertex_index + 2]);
+
+                    // Normal (fall back to up-vector if absent)
+                    if (idx.normal_index >= 0)
+                    {
+                        normal_buffer_data.push_back(
+                            attrib.normals[3 * idx.normal_index + 0]);
+                        normal_buffer_data.push_back(
+                            attrib.normals[3 * idx.normal_index + 1]);
+                        normal_buffer_data.push_back(
+                            attrib.normals[3 * idx.normal_index + 2]);
+                    }
+                    else
+                    {
+                        normal_buffer_data.push_back(0.f);
+                        normal_buffer_data.push_back(1.f);
+                        normal_buffer_data.push_back(0.f);
+                    }
+
+                    if (idx.texcoord_index >= 0)
+                    {
+                        texture_buffer_data.push_back(
+                            attrib.texcoords[2 * idx.texcoord_index + 0]);
+                        texture_buffer_data.push_back(
+                            attrib.texcoords[2 * idx.texcoord_index + 1]);
+                    }
+
+                    color_buffer_data.push_back(
+                        attrib.colors[3 * idx.vertex_index + 0]);
+                    color_buffer_data.push_back(
+                        attrib.colors[3 * idx.vertex_index + 1]);
+                    color_buffer_data.push_back(
+                        attrib.colors[3 * idx.vertex_index + 2]);
+                }
+            }
+            index_offset += fv;
+        }
+    }
+
+    return !vertex_buffer_data.empty();
+}
+
 int main(int argc, char* argv[])
 {
+    if (argc != 2)
+    {
+        std::cerr << "Wrong usage: ./main <file.obj>\n";
+        return 2;
+    }
+
+    if (!load_obj(argv[1]))
+    {
+        std::cerr << "Wrong obj file\n";
+        return 3;
+    }
+
     // Create GL window and context
-    // init_glut(argc, argv);
-    (void)argc;
-    (void)argv;
+
     init_GLFW();
 
     // Loads GL functions pointers
@@ -297,41 +432,7 @@ int main(int argc, char* argv[])
         return 1;
 
     while (!glfwWindowShouldClose(window))
-    {
-        // Clear the color and the depth
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        TEST_OPENGL_ERROR();
-
-        // Activate the VAO
-        glBindVertexArray(vao_id);
-        TEST_OPENGL_ERROR();
-
-        // Get the uniformLocation of object_color
-        GLint color_loc = glGetUniformLocation(p->program_id, "object_color");
-        TEST_OPENGL_ERROR();
-        if (color_loc == -1)
-        {
-            std::cerr << "Uniform 'color_location' not found" << std::endl;
-        }
-
-        // Upload a warm color fot the object
-        // This variable is used for the object as a fiffuse color in the
-        // lighting
-        glUniform3f(color_loc, 0.95f, 0.4f, 0.f);
-        TEST_OPENGL_ERROR();
-
-        // Set primitives
-        glDrawArrays(GL_TRIANGLES, 0, vertex_buffer_data.size() / 3);
-        TEST_OPENGL_ERROR();
-
-        // Unbind the VAO
-        glBindVertexArray(0);
-        TEST_OPENGL_ERROR();
-
-        // Swaps the buffers
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
+        display(p);
 
     delete p;
     glfwTerminate();
