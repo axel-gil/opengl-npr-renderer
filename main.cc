@@ -15,7 +15,6 @@
 // #include "object_vbo.hh"
 #include "program.hh"
 
-#define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.hh"
 
 // #define SAVE_RENDER
