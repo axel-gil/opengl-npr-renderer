@@ -19,7 +19,7 @@ SRC = main.cc \
 
 OBJ = $(SRC:.cc=.o)
 
-CXXFLAGS += -Wall -Wextra -O3 -g -std=c++11
+CXXFLAGS += -Wall -Wextra -O3 -g -std=c++20
 CXXFLAGS += -m64 -march=native
 
 ifeq ($(platform),Darwin)
@@ -36,7 +36,8 @@ endif
 
 ifeq ($(platform),Darwin)
 CPPFLAGS += -I/opt/homebrew/opt/glfw/include \
-		   	-I/opt/homebrew/opt/glew/include
+		   	-I/opt/homebrew/opt/glew/include \
+		   	-DGL_SILENCE_DEPRECATION
 LDFLAGS += -L/opt/homebrew/lib \
 		   -L/opt/homebrew/opt/glew/lib \
            -L/opt/homebrew/opt/glfw/lib
