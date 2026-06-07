@@ -74,6 +74,7 @@ THE SOFTWARE.
 #    include <memory>
 #    include <new>
 #    include <type_traits>
+#include "init_gl.hh"
 
 namespace tinyobj
 {

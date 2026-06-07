@@ -1,40 +1,19 @@
 #version 410 core
 
-// Per-vertex position from VBO (in object/world space)
-layout (location = 0) in vec3 position;
+layout(location = 0) in vec3 in_position;
+layout(location = 1) in vec3 in_normal;
+layout(location = 2) in vec2 in_uv;
+layout(location = 3) in vec3 in_color;
 
-// Per-vertex normal from VBO (in world space)
-layout (location = 1) in vec3 normal;
+uniform mat4 model_view;
+uniform mat4 projection;
 
-layout (location = 2) in vec2 uv;
-
-// Per-vertex colo from VBO
-layout (location = 3) in vec3 color;
-
-// Matrices uploaded by init_POV()
-uniform mat4 model_view;   // world -> camera space
-uniform mat4 projection;   // camera space -> clip space
-
-// Pass the normal and the position (in camera space) to the fragment shader.
-// 'out' variables are interpolated across the triangle's surface automatically.
-out vec3 frag_normal;
-out vec3 frag_pos_cam; // position in camera space (used to compute view direction)
-out vec3 output_color;
-out vec2 vertex_uv;
+out vec3 normal;
+out vec2 uv;
 
 void main()
 {
-    // Transform position into camera space (needed for lighting in frag shader)
-    vec4 pos_cam = model_view * vec4(position, 1.0);
-    frag_pos_cam = pos_cam.xyz;
-
-    // Transform the normal into camera space.
-    // We use the upper-left 3x3 of model_view (no translation).
-    // For a pure rotation+translation matrix this is correct.
-    frag_normal = mat3(model_view) * normal;
-
-    // Final clip-space position (what OpenGL actually uses for rasterization)
-    gl_Position = projection * pos_cam;
-    output_color = color;
-    vertex_uv = uv;
+    gl_Position = projection * model_view * vec4(in_position, 1.0);
+    normal = mat3(model_view) * in_normal;
+    uv = in_uv;
 }

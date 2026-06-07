@@ -16,6 +16,7 @@
 #include "tiny_obj_loader.hh"
 
 #include "init_gl.hh"
+#include "utils.hh"
 
 // Globals
 GLuint vao_id;
@@ -33,7 +34,7 @@ static mygl::Matrix4 update(float time)
 }
 
 void display(const mygl::program* p, GLFWwindow* window, Camera& camera,
-             size_t vertex_count)
+             size_t vertex_count, GLuint tex)
 {
     // Clear the color and the depth
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -65,6 +66,11 @@ void display(const mygl::program* p, GLFWwindow* window, Camera& camera,
     glUniformMatrix4fv(model_loc, 1, GL_FALSE,
                        flame_model_matrix.get_data().data());
 
+    // Set the textures
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glUniform1i(glGetUniformLocation(p->program_id, "tex_diffuse"), 0);
+
     // Set primitives
     glDrawArrays(GL_TRIANGLES, 0, vertex_count);
     TEST_OPENGL_ERROR();
@@ -88,7 +94,6 @@ int main(int argc, char* argv[])
 
     // xyz nxnynz uv rgb
     std::vector<GLfloat> obj_buffer;
-
     if (!load_obj(argv[1], obj_buffer))
     {
         std::cerr << "Wrong obj file\n";
@@ -117,13 +122,16 @@ int main(int argc, char* argv[])
     if (!init_POV(p))
         return 1;
 
+    GLuint tex = load_texture(
+        "textures/tripo_mat_0fd31f00-a609-4dff-92d1-6f84a6da7224_diffuse.jpeg");
+
     Camera camera = Camera(window);
 
     while (!glfwWindowShouldClose(window))
     {
         camera.update_camera(p);
 
-        display(p, window, camera, obj_buffer.size() / 11);
+        display(p, window, camera, obj_buffer.size() / 11, tex);
     }
 
     delete p;
