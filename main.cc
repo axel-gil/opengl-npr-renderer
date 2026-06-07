@@ -235,25 +235,25 @@ void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
     glBindVertexArray(vao_id);
     TEST_OPENGL_ERROR();
 
-    // Get the uniformLocation of object_color
-    GLint color_loc = glGetUniformLocation(p->program_id, "object_color");
-    TEST_OPENGL_ERROR();
+    // // Get the uniformLocation of object_color
+    // GLint color_loc = glGetUniformLocation(p->program_id, "object_color");
+    // TEST_OPENGL_ERROR();
 
-    if (color_loc == -1)
-    {
-        std::cerr << "Uniform 'color_location' not found" << std::endl;
-    }
+    // if (color_loc == -1)
+    // {
+    //     std::cerr << "Uniform 'object_color' not found" << std::endl;
+    // }
 
-    // // Upload a warm color fot the object
-    // // This variable is used for the object as a fiffuse color in the
-    // // lighting
-    glUniform3f(color_loc, 0.95f, 0.4f, 0.f);
-    TEST_OPENGL_ERROR();
+    // // // Upload a warm color fot the object
+    // // // This variable is used for the object as a fiffuse color in the
+    // // // lighting
+    // glUniform3f(color_loc, 0.95f, 0.4f, 0.f);
+    // TEST_OPENGL_ERROR();
 
     GLint time_loc = glGetUniformLocation(p->program_id, "time");
     TEST_OPENGL_ERROR();
 
-    if (color_loc == -1)
+    if (time_loc == -1)
     {
         std::cerr << "Uniform 'time' not found" << std::endl;
     }
