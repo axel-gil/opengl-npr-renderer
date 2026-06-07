@@ -1,4 +1,3 @@
-#include <cmath>
 #ifdef __APPLE__
 #    define GL_SILENCE_DEPRECATION
 #endif
@@ -14,6 +13,7 @@
 #include "transformation.hh"
 // #include "object_vbo.hh"
 #include "program.hh"
+#include "camera.hh"
 
 #include "tiny_obj_loader.hh"
 
@@ -239,6 +239,8 @@ static mygl::Matrix4 update(float time)
 
 void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
 {
+    update_camera(p);
+
     // Clear the color and the depth
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     TEST_OPENGL_ERROR();
