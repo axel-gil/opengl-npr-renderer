@@ -35,11 +35,6 @@
 // Globals
 GLuint vao_id;
 
-// std::vector<GLfloat> vertex_buffer_data;
-// std::vector<GLfloat> normal_buffer_data;
-// std::vector<GLfloat> texture_buffer_data;
-// std::vector<GLfloat> color_buffer_data;
-
 // Glut window_resize function
 void window_resize(int width, int height)
 {
@@ -105,7 +100,7 @@ bool init_shaders(mygl::program** p)
 }
 
 // Init the global
-bool init_object(std::vector<GLfloat> obj_buffer)
+bool init_object(const std::vector<GLfloat>& obj_buffer)
 {
     // Generate 1 vertex array
     // The name is stored in vao_id (global variable)
@@ -289,87 +284,6 @@ void process_input(GLFWwindow* window)
     {
         glfwSetWindowShouldClose(window, true);
     }
-}
-
-bool load_obj(const std::string& path, std::vector<GLfloat>& result_buffer)
-{
-    tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = "./"; // Path to material files
-
-    tinyobj::ObjReader reader;
-
-    if (!reader.ParseFromFile(path, reader_config))
-    {
-        if (!reader.Error().empty())
-            std::cerr << "TinyObjReader error: " << reader.Error();
-        return false;
-    }
-
-    if (!reader.Warning().empty())
-        std::cerr << "TinyObjReader warning: " << reader.Warning();
-
-    const auto& attrib = reader.GetAttrib();
-    const auto& shapes = reader.GetShapes();
-
-    for (const auto& shape : shapes)
-    {
-        size_t index_offset = 0;
-
-        for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++)
-        {
-            int fv = shape.mesh.num_face_vertices[f]; // 3 or 4 (or more)
-
-            // Fan triangulation: triangle = (0, v, v+1) for v in [1, fv-2]
-            for (int v = 1; v <= fv - 2; v++)
-            {
-                for (int corner : { 0, v, v + 1 })
-                {
-                    tinyobj::index_t idx =
-                        shape.mesh.indices[index_offset + corner];
-
-                    // Position
-                    result_buffer.push_back(
-                        attrib.vertices[3 * idx.vertex_index + 0]);
-                    result_buffer.push_back(
-                        attrib.vertices[3 * idx.vertex_index + 1]);
-                    result_buffer.push_back(
-                        attrib.vertices[3 * idx.vertex_index + 2]);
-
-                    if (idx.normal_index >= 0)
-                    {
-                        result_buffer.push_back(
-                            attrib.normals[3 * idx.normal_index + 0]);
-                        result_buffer.push_back(
-                            attrib.normals[3 * idx.normal_index + 1]);
-                        result_buffer.push_back(
-                            attrib.normals[3 * idx.normal_index + 2]);
-                    }
-                    else
-                        return false;
-
-                    if (idx.texcoord_index >= 0)
-                    {
-                        result_buffer.push_back(
-                            attrib.texcoords[2 * idx.texcoord_index + 0]);
-                        result_buffer.push_back(
-                            attrib.texcoords[2 * idx.texcoord_index + 1]);
-                    }
-                    else
-                        return false;
-
-                    result_buffer.push_back(
-                        attrib.colors[3 * idx.vertex_index + 0]);
-                    result_buffer.push_back(
-                        attrib.colors[3 * idx.vertex_index + 1]);
-                    result_buffer.push_back(
-                        attrib.colors[3 * idx.vertex_index + 2]);
-                }
-            }
-            index_offset += fv;
-        }
-    }
-
-    return true;
 }
 
 int main(int argc, char* argv[])
