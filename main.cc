@@ -239,8 +239,6 @@ static mygl::Matrix4 update(float time)
 
 void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
 {
-    update_camera(p);
-
     // Clear the color and the depth
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     TEST_OPENGL_ERROR();
@@ -348,9 +346,13 @@ int main(int argc, char* argv[])
     if (!init_POV(p))
         return 1;
 
+    Camera camera = Camera(window);
+
     while (!glfwWindowShouldClose(window))
     {
         process_input(window);
+
+        camera.update_camera(p);
 
         display(p, window, obj_buffer.size() / 11);
     }
