@@ -212,7 +212,9 @@ static bool init_POV(const mygl::program* p)
 
 static bool init_GLFW(GLFWwindow** window)
 {
+#ifndef __APPLE__
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
     if (!glfwInit())
         return false;
 
