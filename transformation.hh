@@ -22,4 +22,10 @@ namespace mygl
 
     // Normalize the GLfloat vector
     void normalize(GLfloat v[3]);
+
+    // Translate by vector (x, y, z)
+    Matrix4 translate(GLfloat x, GLfloat y, GLfloat z);
+
+    // Scale each axis
+    Matrix4 scale(GLfloat x, GLfloat y, GLfloat z);
 } // namespace mygl

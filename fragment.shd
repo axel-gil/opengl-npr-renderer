@@ -15,6 +15,9 @@ out vec4 frag_color;
 
 void main()
 {
+    // Avoid "uniform time does not exist"
+    // if time is not used, it is deleted by the glsl compiler
+    // and the c++ code do not find the uniform time
     float a = time;
     // Re-normalize after interpolation (interpolated normals lose unit length)
     vec3 N = normalize(frag_normal);

@@ -1,3 +1,4 @@
+#include <cmath>
 #ifdef __APPLE__
 #    define GL_SILENCE_DEPRECATION
 #endif
@@ -36,7 +37,7 @@
 GLuint vao_id;
 
 // Glut window_resize function
-void window_resize(int width, int height)
+static void window_resize(int width, int height)
 {
     // std::cout << "glViewport(0,0,"<< width << "," << height <<
     // ");TEST_OPENGL_ERROR();" << std::endl;
@@ -58,7 +59,7 @@ bool init_glew()
 }
 
 // Init OpenGL
-void init_GL()
+static void init_GL()
 {
     // Make OpenGL vigilant on object overwrite with the z buffer
     glEnable(GL_DEPTH_TEST);
@@ -78,7 +79,7 @@ void init_GL()
 }
 
 // Init the shaders
-bool init_shaders(mygl::program** p)
+static bool init_shaders(mygl::program** p)
 {
     mygl::program* program =
         mygl::program::makeprogram("vertex.shd", "fragment.shd");
@@ -158,7 +159,7 @@ bool init_object(const std::vector<GLfloat>& obj_buffer)
     return true;
 }
 
-bool init_POV(const mygl::program* p)
+static bool init_POV(const mygl::program* p)
 {
     mygl::Matrix4 view =
         mygl::lookat(0.0f, 1.5f, -4.0f, 1.0f, 1.5f, 0.0f, 0.0f, 1.0f, 0.0f);
@@ -202,7 +203,7 @@ bool init_POV(const mygl::program* p)
     return true;
 }
 
-bool init_GLFW(GLFWwindow** window)
+static bool init_GLFW(GLFWwindow** window)
 {
     if (!glfwInit())
         return false;
@@ -223,6 +224,18 @@ bool init_GLFW(GLFWwindow** window)
     *window = w;
 
     return true;
+}
+
+static mygl::Matrix4 update(float time)
+{
+    float flicker_y = 1 + 0.15f * sin(time * 15.0f);
+    float flicker_x = 1 + 0.05f * sin(time * 17.0f);
+
+    mygl::Matrix4 t = mygl::translate(0.0f, 0.5f, 0.0f);
+    mygl::Matrix4 s = mygl::scale(flicker_x, flicker_y, flicker_x);
+    t *= s;
+
+    return t;
 }
 
 void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
@@ -261,8 +274,17 @@ void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
     // // Upload a warm color fot the object
     // // This variable is used for the object as a fiffuse color in the
     // // lighting
-    glUniform1f(time_loc, (float)glfwGetTime());
+    float time = (float)glfwGetTime();
+    glUniform1f(time_loc, time);
     TEST_OPENGL_ERROR();
+    GLint model_loc = glGetUniformLocation(p->program_id, "model_view");
+
+    mygl::Matrix4 flame_model_matrix =
+        mygl::lookat(0.0f, 1.5f, -4.0f, 1.0f, 1.5f, 0.0f, 0.0f, 1.0f, 0.0f);
+    flame_model_matrix *= update(time);
+
+    glUniformMatrix4fv(model_loc, 1, GL_FALSE,
+                       flame_model_matrix.get_data().data());
 
     // Set primitives
     glDrawArrays(GL_TRIANGLES, 0, vertex_count);
