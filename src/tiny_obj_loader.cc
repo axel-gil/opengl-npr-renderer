@@ -1,17 +1,16 @@
 #include <iostream>
 #include <filesystem>
+#include "init_gl.hh"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.hh"
-
-namespace fs = std::filesystem;
 
 bool load_obj(const std::string& path, std::vector<float>& result_buffer)
 {
     tinyobj::ObjReaderConfig reader_config;
 
-    const fs::path p = path;
-    reader_config.mtl_search_path = p.parent_path(); // Path to material files
+    const std::filesystem::path p = path;
+    reader_config.mtl_search_path = p.parent_path();
 
     tinyobj::ObjReader reader;
 
@@ -29,15 +28,17 @@ bool load_obj(const std::string& path, std::vector<float>& result_buffer)
     const auto& shapes = reader.GetShapes();
     const auto& materials = reader.GetMaterials();
 
+    // Iterate on shapes
     for (const auto& shape : shapes)
     {
         size_t index_offset = 0;
 
+        // Iterate on verticles
         for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++)
         {
             int fv = shape.mesh.num_face_vertices[f]; // 3 or 4 (or more)
 
-            // // get the material for this face
+            // get the material for this face
             int mat_id = shape.mesh.material_ids[f];
 
             float r = 1.0f, g = 1.0f, b = 1.0f; // default white
@@ -48,7 +49,7 @@ bool load_obj(const std::string& path, std::vector<float>& result_buffer)
                 b = materials[mat_id].diffuse[2]; // Kd b
             }
 
-            // Fan triangulation: triangle = (0, v, v+1) for v in [1, fv-2]
+            // Fill the result_buffer with
             for (int v = 1; v <= fv - 2; v++)
             {
                 for (int corner : { 0, v, v + 1 })
