@@ -44,11 +44,15 @@ bool init_glew()
 {
     // Try to add all OpenGL functions pointers at runtime
     // Return an error if failing
-    if (glewInit())
+    glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    if (err != GLEW_OK)
     {
         std::cerr << "Error while initializing glew" << std::endl;
+        std::cerr << glewGetErrorString(err) << std::endl;
         return false;
     }
+    glGetError();
     return true;
 }
 
@@ -199,6 +203,7 @@ static bool init_POV(const mygl::program* p)
 
 static bool init_GLFW(GLFWwindow** window)
 {
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
     if (!glfwInit())
         return false;
 
@@ -321,11 +326,13 @@ int main(int argc, char* argv[])
 
     // Create GL window and context
     GLFWwindow* window;
-    init_GLFW(&window);
+
+    if (!init_GLFW(&window))
+        return 2;
 
     // Loads GL functions pointers
     if (!init_glew())
-        return 1;
+        return 4;
 
     // Set global rendering state
     init_GL();
