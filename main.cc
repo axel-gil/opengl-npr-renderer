@@ -1,5 +1,4 @@
 #include <cmath>
-#include "camera.hh"
 #ifdef __APPLE__
 #    define GL_SILENCE_DEPRECATION
 #endif
@@ -15,6 +14,7 @@
 #include "transformation.hh"
 // #include "object_vbo.hh"
 #include "program.hh"
+#include "camera.hh"
 
 #include "tiny_obj_loader.hh"
 
@@ -221,7 +221,9 @@ bool init_POV(const mygl::program* p)
 
 bool init_GLFW(GLFWwindow** window)
 {
+#ifndef __APPLE__
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
     if (!glfwInit())
         return false;
 
