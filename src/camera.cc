@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include "matrix4.hh"
 #include "transformation.hh"
 
@@ -125,10 +126,14 @@ void Camera::update_camera(const mygl::program* p)
     cam_center_[1] = cam_eye_[1] + forward_y;
     cam_center_[2] = cam_eye_[2] + forward_z;
 
-    mygl::Matrix4 view =
-        mygl::lookat(cam_eye_[0], cam_eye_[1], cam_eye_[2], cam_center_[0],
-                     cam_center_[1], cam_center_[2], 0.0f, 1.0f, 0.0f);
+    view = mygl::lookat(cam_eye_[0], cam_eye_[1], cam_eye_[2], cam_center_[0],
+                        cam_center_[1], cam_center_[2], 0.0f, 1.0f, 0.0f);
 
     GLint view_loc = glGetUniformLocation(p->program_id, "model_view");
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, view.get_data().data());
+}
+
+mygl::Matrix4 Camera::get_view()
+{
+    return view;
 }

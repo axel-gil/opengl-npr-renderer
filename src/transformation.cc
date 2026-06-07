@@ -81,4 +81,24 @@ namespace mygl
         return Matrix4(std::vector<GLfloat>{ xnear, 0, 0, 0, 0, ynear, 0, 0, A,
                                              B, C, -1, 0, 0, D, 0 });
     }
+
+    Matrix4 translate(GLfloat x, GLfloat y, GLfloat z)
+    {
+        return Matrix4(std::vector<GLfloat>{
+            1, 0, 0, 0, // col 0
+            0, 1, 0, 0, // col 1
+            0, 0, 1, 0, // col 2
+            x, y, z, 1 // col 3 = translation
+        });
+    }
+
+    Matrix4 scale(GLfloat x, GLfloat y, GLfloat z)
+    {
+        return Matrix4(std::vector<GLfloat>{
+            x, 0, 0, 0, // col 0
+            0, y, 0, 0, // col 1
+            0, 0, z, 0, // col 2
+            0, 0, 0, 1 // col 3
+        });
+    }
 } // namespace mygl

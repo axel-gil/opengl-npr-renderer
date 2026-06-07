@@ -7,8 +7,16 @@ else
 CC = g++
 endif
 
-SRC = image.cc  image_io.cc matrix4.cc transformation.cc program.cc \
-	  tiny_obj_loader.cc camera.cc
+SRC = main.cc \
+	  src/image.cc \
+	  src/image_io.cc \
+	  src/matrix4.cc \
+	  src/transformation.cc \
+	  src/program.cc \
+	  src/tiny_obj_loader.cc \
+	  src/camera.cc \
+	  src/init_gl.cc 
+
 OBJ = $(SRC:.cc=.o)
 
 CXXFLAGS += -Wall -Wextra -O3 -g -std=c++11
@@ -47,6 +55,8 @@ LIBS=glfw3 gl glew
 CPPFLAGS += $(shell pkg-config --cflags $(LIBS) )
 LDFLAGS += $(shell pkg-config --libs $(LIBS) )
 endif
+
+CPPFLAGS += -Isrc/
 
 all: main
 

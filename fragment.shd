@@ -7,13 +7,18 @@ in vec3 output_color;
 in vec2 vertex_uv;
 
 // Uniforms uploaded by init_POV()
-uniform vec3 object_color; // base diffuse color of the object
+// uniform vec3 object_color; // base diffuse color of the object
 uniform vec3 light_dir;    // light direction in world space (non-normalized is fine)
+uniform float time;
 
 out vec4 frag_color;
 
 void main()
 {
+    // Avoid "uniform time does not exist"
+    // if time is not used, it is deleted by the glsl compiler
+    // and the c++ code do not find the uniform time
+    float a = time;
     // Re-normalize after interpolation (interpolated normals lose unit length)
     vec3 N = normalize(frag_normal);
 
@@ -25,12 +30,12 @@ void main()
     // --- Ambient ---
     // A small constant term so faces pointing away from the light aren't pure black.
     float ambient_strength = 0.15;
-    vec3 ambient = ambient_strength * object_color;
+    vec3 ambient = ambient_strength * output_color;
 
     // --- Diffuse (Lambertian) ---
     // max(0, N·L): surfaces facing the light are bright, back-faces are 0.
     float diff = max(dot(N, L), 0.0);
-    vec3 diffuse = diff * object_color;
+    vec3 diffuse = diff * output_color;
 
     // --- Specular (Blinn-Phong) ---
     // The view direction: from the fragment toward the camera (camera is at origin
@@ -43,6 +48,7 @@ void main()
 
     // Combine all three lighting components
     vec3 color = ambient + diffuse + 0.5 * specular;
+    // vec3 color = vec3(0.3 * time, 0.1 * time, 0.1 * time);
 
     frag_color = vec4(color, 1.0);
 }

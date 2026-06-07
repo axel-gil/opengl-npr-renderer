@@ -53,6 +53,7 @@ namespace mygl
 
             // Allocate a string for the logs, fetch and display them
             char* log = (char*)std::malloc(log_size + 1);
+            glGetShaderInfoLog(shader_id, log_size, &log_size, log);
             std::stringstream ss;
 
             ss << "FAILURE can not compile shader " << filename << ": " << log
