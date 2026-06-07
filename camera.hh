@@ -1,5 +1,6 @@
 #pragma once
 
+#include "matrix4.hh"
 #include "program.hh"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -12,6 +13,7 @@ public:
            GLfloat cam_yaw, GLfloat cam_pitch, const GLfloat cam_rot_speed,
            const GLfloat cam_speed, const GLfloat mouse_sensitivity);
     void update_camera(const mygl::program* p);
+    mygl::Matrix4 get_view();
 
 private:
     GLFWwindow* window_;
@@ -25,4 +27,5 @@ private:
     float last_mouse_y_;
     bool mouse_init_;
     const float mouse_sensitivity_;
+    mygl::Matrix4 view;
 };

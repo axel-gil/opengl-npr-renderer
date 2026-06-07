@@ -253,7 +253,8 @@ static mygl::Matrix4 update(float time)
     return t;
 }
 
-void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
+void display(const mygl::program* p, GLFWwindow* window, Camera& camera,
+             size_t vertex_count)
 {
     // Clear the color and the depth
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -294,8 +295,7 @@ void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
     TEST_OPENGL_ERROR();
     GLint model_loc = glGetUniformLocation(p->program_id, "model_view");
 
-    mygl::Matrix4 flame_model_matrix =
-        mygl::lookat(0.0f, 1.5f, -4.0f, 1.0f, 1.5f, 0.0f, 0.0f, 1.0f, 0.0f);
+    mygl::Matrix4 flame_model_matrix = camera.get_view();
     flame_model_matrix *= update(time);
 
     glUniformMatrix4fv(model_loc, 1, GL_FALSE,
@@ -359,7 +359,7 @@ int main(int argc, char* argv[])
     {
         camera.update_camera(p);
 
-        display(p, window, obj_buffer.size() / 11);
+        display(p, window, camera, obj_buffer.size() / 11);
     }
 
     delete p;
