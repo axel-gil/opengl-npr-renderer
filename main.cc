@@ -6,7 +6,6 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 
@@ -16,11 +15,6 @@
 #include "program.hh"
 
 #include "tiny_obj_loader.hh"
-
-// #define SAVE_RENDER
-// #if defined(SAVE_RENDER)
-//   bool saved = false;
-// #endif
 
 #define TEST_OPENGL_ERROR()                                                    \
     do                                                                         \
