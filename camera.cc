@@ -75,9 +75,14 @@ void Camera::update_camera(const mygl::program* p)
     float forward_y = std::sin(cam_pitch_);
     float forward_z = std::cos(cam_pitch_) * std::sin(cam_yaw_);
 
+    // forward but we dont take pitch as a param to move only on the horizontal
+    // axis
+    float move_fx = std::cos(cam_yaw_);
+    float move_fz = std::sin(cam_yaw_);
+
     // right axis vector normalized
-    float right_x = -forward_z;
-    float right_z = forward_x;
+    float right_x = -move_fz;
+    float right_z = move_fx;
     float rlen = std::sqrt(right_x * right_x + right_z * right_z);
     right_x /= rlen;
     right_z /= rlen;
@@ -85,15 +90,13 @@ void Camera::update_camera(const mygl::program* p)
     // translations movements
     if (glfwGetKey(window_, GLFW_KEY_W) == GLFW_PRESS)
     {
-        cam_eye_[0] += forward_x * cam_speed_;
-        cam_eye_[1] += forward_y * cam_speed_;
-        cam_eye_[2] += forward_z * cam_speed_;
+        cam_eye_[0] += move_fx * cam_speed_;
+        cam_eye_[2] += move_fz * cam_speed_;
     }
     if (glfwGetKey(window_, GLFW_KEY_S) == GLFW_PRESS)
     {
-        cam_eye_[0] -= forward_x * cam_speed_;
-        cam_eye_[1] -= forward_y * cam_speed_;
-        cam_eye_[2] -= forward_z * cam_speed_;
+        cam_eye_[0] -= move_fx * cam_speed_;
+        cam_eye_[2] -= move_fz * cam_speed_;
     }
     if (glfwGetKey(window_, GLFW_KEY_D) == GLFW_PRESS)
     {
