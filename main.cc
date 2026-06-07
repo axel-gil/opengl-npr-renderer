@@ -48,11 +48,11 @@ void display(const mygl::program* p, GLFWwindow* window, Camera& camera,
 
     GLint time_loc = glGetUniformLocation(p->program_id, "time");
     TEST_OPENGL_ERROR();
-
-    if (time_loc == -1)
-    {
-        std::cerr << "Uniform 'time' not found" << std::endl;
-    }
+    /*
+        if (time_loc == -1)
+        {
+            std::cerr << "Uniform 'time' not found" << std::endl;
+        }*/
 
     // Upload a warm color fot the object
     // This variable is used for the object as a fiffuse color in the

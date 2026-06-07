@@ -5,6 +5,7 @@
 #include "transformation.hh"
 
 #include <iostream>
+#include <cmath>
 
 // Init OpenGLfunctions
 bool init_glew()

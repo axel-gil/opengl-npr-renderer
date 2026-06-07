@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include "matrix4.hh"
 #include "transformation.hh"
 
@@ -12,12 +11,12 @@ Camera::Camera(GLFWwindow* window)
     , cam_center_{ 1.0f, 1.5f, 0.0f }
     , cam_yaw_(1.5708f)
     , cam_pitch_(0.0f)
-    , cam_rot_speed_(0.02f)
     , cam_speed_(0.05f)
-    , mouse_sensitivity_(0.0025f)
+    , cam_rot_speed_(0.02f)
     , last_mouse_x_(0.0f)
     , last_mouse_y_(0.0f)
     , mouse_init_(true)
+    , mouse_sensitivity_(0.0025f)
 {}
 
 Camera::Camera(GLFWwindow* window, GLfloat cam_eye[3], GLfloat cam_center[3],
@@ -26,12 +25,12 @@ Camera::Camera(GLFWwindow* window, GLfloat cam_eye[3], GLfloat cam_center[3],
     : window_(window)
     , cam_yaw_(cam_yaw)
     , cam_pitch_(cam_pitch)
-    , cam_rot_speed_(cam_rot_speed)
     , cam_speed_(cam_speed)
-    , mouse_sensitivity_(mouse_sensitivity)
+    , cam_rot_speed_(cam_rot_speed)
     , last_mouse_x_(0.0f)
     , last_mouse_y_(0.0f)
     , mouse_init_(true)
+    , mouse_sensitivity_(mouse_sensitivity)
 {
     std::copy(cam_eye, cam_eye + 3, cam_eye_);
     std::copy(cam_center, cam_center + 3, cam_center_);

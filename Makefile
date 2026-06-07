@@ -22,16 +22,6 @@ OBJ = $(SRC:.cc=.o)
 CXXFLAGS += -Wall -Wextra -O3 -g -std=c++11
 CXXFLAGS += -m64 -march=native
 
-ifeq ($(CC),clang++)
-# CXXFLAGS += -Rpass=loop-vectorize \
-# 			 -Rpass-missed=loop-vectorize \
-# 			 -Rpass-analysis=loop-vectorize
-else
-CXXFLAGS += -fopt-info-vec-optimized \
-			 -fopt-info-vec-missed \
-			 -ftree-vectorize
-endif
-
 ifeq ($(platform),Darwin)
 LDLIBS = -framework OpenGL \
 		 -framework Cocoa \

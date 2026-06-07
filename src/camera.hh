@@ -19,9 +19,9 @@ private:
     GLFWwindow* window_;
     GLfloat cam_eye_[3];
     GLfloat cam_center_[3];
-    const GLfloat cam_speed_;
     GLfloat cam_yaw_;
     GLfloat cam_pitch_;
+    const GLfloat cam_speed_;
     const GLfloat cam_rot_speed_;
     float last_mouse_x_;
     float last_mouse_y_;
