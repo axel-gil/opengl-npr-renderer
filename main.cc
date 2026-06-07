@@ -162,7 +162,16 @@ static bool init_POV(const mygl::program* p)
     mygl::Matrix4 view =
         mygl::lookat(0.0f, 1.5f, -4.0f, 1.0f, 1.5f, 0.0f, 0.0f, 1.0f, 0.0f);
 
-    mygl::Matrix4 proj = mygl::frustum(-0.5f, 0.5f, -0.5f, 0.5f, 0.1f, 100.0f);
+    // FOV of 90
+    float fovy = 90.0f * M_PI / 180.0f;
+    float aspect = 1920.0 / 1080;
+    float znear = 0.1f, zfar = 100.0f;
+
+    float top = znear * std::tan(fovy * 0.5f);
+    float bottom = -top;
+    float right = top * aspect;
+    float left = -right;
+    mygl::Matrix4 proj = mygl::frustum(left, right, bottom, top, znear, zfar);
 
     // Get the uniformLocation in the program with a named uniform variable
     // Return -1 if the variable doesn't exist
