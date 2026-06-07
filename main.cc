@@ -166,7 +166,7 @@ bool init_POV(const mygl::program* p)
     mygl::Matrix4 view =
         mygl::lookat(0.0f, 1.5f, -4.0f, 1.0f, 1.5f, 0.0f, 0.0f, 1.0f, 0.0f);
 
-    mygl::Matrix4 proj = mygl::frustum(-5.0f, 5.0f, -5.0f, 5.0f, 1.0f, 100.0f);
+    mygl::Matrix4 proj = mygl::frustum(-0.5f, 0.5f, -0.5f, 0.5f, 0.1f, 100.0f);
 
     // Get the uniformLocation in the program with a named uniform variable
     // Return -1 if the variable doesn't exist
