@@ -8,7 +8,7 @@ CC = g++
 endif
 
 SRC = image.cc  image_io.cc matrix4.cc transformation.cc program.cc \
-	  tiny_obj_loader.cc camera.cc
+	  tiny_obj_loader.cc camera.cc init_gl.cc
 OBJ = $(SRC:.cc=.o)
 
 CXXFLAGS += -Wall -Wextra -O3 -g -std=c++11
