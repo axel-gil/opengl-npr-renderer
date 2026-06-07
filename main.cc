@@ -307,15 +307,6 @@ void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
     glfwPollEvents();
 }
 
-void process_input(GLFWwindow* window)
-{
-    // only handle escape key for now (what a garbage api)
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
-}
-
 int main(int argc, char* argv[])
 {
     if (argc != 2)
@@ -359,8 +350,6 @@ int main(int argc, char* argv[])
 
     while (!glfwWindowShouldClose(window))
     {
-        process_input(window);
-
         camera.update_camera(p);
 
         display(p, window, obj_buffer.size() / 11);
