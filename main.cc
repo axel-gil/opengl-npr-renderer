@@ -1,3 +1,4 @@
+#include "camera.hh"
 #ifdef __APPLE__
 #    define GL_SILENCE_DEPRECATION
 #endif
@@ -33,6 +34,17 @@ GLuint vao_id;
 // std::vector<GLfloat> normal_buffer_data;
 // std::vector<GLfloat> texture_buffer_data;
 // std::vector<GLfloat> color_buffer_data;
+
+GLfloat cam_eye[3] = { 0.0f, 1.5f, -4.0f };
+GLfloat cam_center[3] = { 1.0f, 1.5f, 0.0f };
+const GLfloat cam_speed = 0.05f;
+GLfloat cam_yaw = 1.5708f;
+GLfloat cam_pitch = 0.0f;
+const GLfloat cam_rot_speed = 0.02f;
+float last_mouse_x = 0.0;
+float last_mouse_y = 0.0;
+bool first_mouse = true;
+const float mouse_sensitivity = 0.0025f;
 
 // Glut window_resize function
 void window_resize(int width, int height)
@@ -231,6 +243,8 @@ bool init_GLFW(GLFWwindow** window)
 
 void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
 {
+    update_camera(p);
+
     // Clear the color and the depth
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     TEST_OPENGL_ERROR();
