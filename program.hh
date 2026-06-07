@@ -4,6 +4,10 @@
 
 #include <GL/glew.h>
 
+#ifdef __APPLE__
+#    include <OpenGL/gl3.h>
+#endif
+
 namespace mygl
 {
     class program

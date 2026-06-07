@@ -1,3 +1,5 @@
+#include <cmath>
+#include "camera.hh"
 #ifdef __APPLE__
 #    define GL_SILENCE_DEPRECATION
 #endif
@@ -6,7 +8,6 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
 
@@ -16,11 +17,6 @@
 #include "program.hh"
 
 #include "tiny_obj_loader.hh"
-
-// #define SAVE_RENDER
-// #if defined(SAVE_RENDER)
-//   bool saved = false;
-// #endif
 
 #define TEST_OPENGL_ERROR()                                                    \
     do                                                                         \
@@ -40,6 +36,9 @@ GLuint vao_id;
 // std::vector<GLfloat> texture_buffer_data;
 // std::vector<GLfloat> color_buffer_data;
 
+GLfloat cam_eye[3] = { 0.0f, 1.5f, -4.0f };
+GLfloat cam_center[3] = { 1.0f, 1.5f, 0.0f };
+
 // Glut window_resize function
 void window_resize(int width, int height)
 {
@@ -54,11 +53,15 @@ bool init_glew()
 {
     // Try to add all OpenGL functions pointers at runtime
     // Return an error if failing
-    if (glewInit())
+    glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    if (err != GLEW_OK)
     {
         std::cerr << "Error while initializing glew" << std::endl;
+        std::cerr << glewGetErrorString(err) << std::endl;
         return false;
     }
+    glGetError();
     return true;
 }
 
@@ -168,7 +171,16 @@ bool init_POV(const mygl::program* p)
     mygl::Matrix4 view =
         mygl::lookat(0.0f, 1.5f, -4.0f, 1.0f, 1.5f, 0.0f, 0.0f, 1.0f, 0.0f);
 
-    mygl::Matrix4 proj = mygl::frustum(-5.0f, 5.0f, -5.0f, 5.0f, 1.0f, 100.0f);
+    // FOV of 90
+    float fovy = 90.0f * M_PI / 180.0f;
+    float aspect = 1920.0 / 1080;
+    float znear = 0.1f, zfar = 100.0f;
+
+    float top = znear * std::tan(fovy * 0.5f);
+    float bottom = -top;
+    float right = top * aspect;
+    float left = -right;
+    mygl::Matrix4 proj = mygl::frustum(left, right, bottom, top, znear, zfar);
 
     // Get the uniformLocation in the program with a named uniform variable
     // Return -1 if the variable doesn't exist
@@ -200,7 +212,7 @@ bool init_POV(const mygl::program* p)
         std::cerr << "Uniform 'light_dir' not found" << std::endl;
     }
 
-    // set light position
+    // Set light position
     glUniform3f(light_loc, 1.0f, 1.0f, 1.0f);
     TEST_OPENGL_ERROR();
 
@@ -209,6 +221,7 @@ bool init_POV(const mygl::program* p)
 
 bool init_GLFW(GLFWwindow** window)
 {
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
     if (!glfwInit())
         return false;
 
@@ -217,7 +230,7 @@ bool init_GLFW(GLFWwindow** window)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // required on macOS
 
-    GLFWwindow* w = glfwCreateWindow(1024, 1024, "TestOpenGL", NULL, NULL);
+    GLFWwindow* w = glfwCreateWindow(2560, 1440, "TestOpenGL", NULL, NULL);
     if (!w)
     {
         glfwTerminate();
@@ -225,6 +238,11 @@ bool init_GLFW(GLFWwindow** window)
     }
 
     glfwMakeContextCurrent(w);
+
+    glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    if (glfwRawMouseMotionSupported())
+        glfwSetInputMode(w, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+
     *window = w;
 
     return true;
@@ -280,15 +298,6 @@ void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
     // Swaps the buffers
     glfwSwapBuffers(window);
     glfwPollEvents();
-}
-
-void process_input(GLFWwindow* window)
-{
-    // only handle escape key for now (what a garbage api)
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
 }
 
 bool load_obj(const std::string& path, std::vector<GLfloat>& result_buffer)
@@ -391,11 +400,13 @@ int main(int argc, char* argv[])
 
     // Create GL window and context
     GLFWwindow* window;
-    init_GLFW(&window);
+
+    if (!init_GLFW(&window))
+        return 2;
 
     // Loads GL functions pointers
     if (!init_glew())
-        return 1;
+        return 4;
 
     // Set global rendering state
     init_GL();
@@ -409,9 +420,11 @@ int main(int argc, char* argv[])
     if (!init_POV(p))
         return 1;
 
+    Camera camera = Camera(window);
+
     while (!glfwWindowShouldClose(window))
     {
-        process_input(window);
+        camera.update_camera(p);
 
         display(p, window, obj_buffer.size() / 11);
     }
