@@ -203,7 +203,7 @@ static bool init_POV(const mygl::program* p)
         std::cerr << "Uniform 'light_dir' not found" << std::endl;
     }
 
-    // set light position
+    // Set light position
     glUniform3f(light_loc, 1.0f, 1.0f, 1.0f);
     TEST_OPENGL_ERROR();
 
@@ -229,6 +229,11 @@ static bool init_GLFW(GLFWwindow** window)
     }
 
     glfwMakeContextCurrent(w);
+
+    glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    if (glfwRawMouseMotionSupported())
+        glfwSetInputMode(w, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+
     *window = w;
 
     return true;
