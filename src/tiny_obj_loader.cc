@@ -1,12 +1,17 @@
 #include <iostream>
+#include <filesystem>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.hh"
 
+namespace fs = std::filesystem;
+
 bool load_obj(const std::string& path, std::vector<float>& result_buffer)
 {
     tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = "./"; // Path to material files
+
+    const fs::path p = path;
+    reader_config.mtl_search_path = p.parent_path(); // Path to material files
 
     tinyobj::ObjReader reader;
 
