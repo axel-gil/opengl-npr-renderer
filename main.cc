@@ -34,30 +34,11 @@
 
 // Globals
 GLuint vao_id;
-GLFWwindow* window;
 
-std::vector<GLfloat> vertex_buffer_data;
-std::vector<GLfloat> normal_buffer_data;
-std::vector<GLfloat> texture_buffer_data;
-std::vector<GLfloat> color_buffer_data;
-
-/*
-std::vector<GLfloat> vertex_buffer_data = {
-    -1, -1, 1,  1,  -1, 1,  0, 1,  0, 1,  -1, 1,  1,  -1, -1, 0, 1,  0,
-    1,  -1, -1, -1, -1, -1, 0, 1,  0, -1, -1, -1, -1, -1, 1,  0, 1,  0,
-    -1, -1, 1,  1,  -1, -1, 1, -1, 1, -1, -1, 1,  -1, -1, -1, 1, -1, -1,
-};
-
-std::vector<GLfloat> normal_buffer_data = {
-    0.0f,    0.4472f, 0.8944f,  0.0f,    0.4472f, 0.8944f,  0.0f,
-    0.4472f, 0.8944f, 0.8944f,  0.4472f, 0.0f,    0.8944f,  0.4472f,
-    0.0f,    0.8944f, 0.4472f,  0.0f,    0.0f,    0.4472f,  -0.8944f,
-    0.0f,    0.4472f, -0.8944f, 0.0f,    0.4472f, -0.8944f, -0.8944f,
-    0.4472f, 0.0f,    -0.8944f, 0.4472f, 0.0f,    -0.8944f, 0.4472f,
-    0.0f,    0,       -1,       0,       0,       -1,       0,
-    0,       -1,      0,        0,       -1,      0,        0,
-    -1,      0,       0,        -1,      0,
-}; */
+// std::vector<GLfloat> vertex_buffer_data;
+// std::vector<GLfloat> normal_buffer_data;
+// std::vector<GLfloat> texture_buffer_data;
+// std::vector<GLfloat> color_buffer_data;
 
 // Glut window_resize function
 void window_resize(int width, int height)
@@ -89,7 +70,7 @@ void init_GL()
     TEST_OPENGL_ERROR();
 
     // Backface culling
-    // glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     TEST_OPENGL_ERROR();
 
     // Added polygons are filled
@@ -124,57 +105,22 @@ bool init_shaders(mygl::program** p)
 }
 
 // Init the global
-bool init_object(const mygl::program* p)
+bool init_object(std::vector<GLfloat> obj_buffer)
 {
-    // Get the get the location in the program of a named attribute here
-    // position
-    // return -1 if name is not an active attribute (not found)
-    GLint vertex_location = glGetAttribLocation(p->program_id, "position");
-    TEST_OPENGL_ERROR();
-    if (vertex_location == -1)
-    {
-        std::cerr << "Attribute 'position' not found in shader" << std::endl;
-        return false;
-    }
-
-    GLint normal_location = glGetAttribLocation(p->program_id, "normal");
-    TEST_OPENGL_ERROR();
-    if (normal_location == -1)
-    {
-        std::cerr << "Attribute 'position' not found in shader" << std::endl;
-        return false;
-    }
-
-    GLint color_location = glGetAttribLocation(p->program_id, "color");
-    TEST_OPENGL_ERROR();
-    if (color_location == -1)
-    {
-        std::cerr << "Attribute 'color' not found in shader" << std::endl;
-        return false;
-    }
-
-    GLint texture_location = glGetAttribLocation(p->program_id, "uv");
-    TEST_OPENGL_ERROR();
-    if (color_location == -1)
-    {
-        std::cerr << "Attribute 'uv' not found in shader" << std::endl;
-        return false;
-    }
-
     // Generate 1 vertex array
     // The name is stored in vao_id (global variable)
-    GLuint vbo_ids[4];
+    GLuint vbo_ids[1];
     glGenVertexArrays(1, &vao_id);
-    TEST_OPENGL_ERROR();
-
-    // Start recording the VAO
+    TEST_OPENGL_ERROR(); // Start recording the VAO
     // Bindings below will be remembered
     glBindVertexArray(vao_id);
     TEST_OPENGL_ERROR();
 
-    // Generate 4 VBO
-    // One for the normal and the other for the positions
-    glGenBuffers(4, vbo_ids);
+    // Generate 1 VBO containing 4 attributes.
+    // it is shaped like this:
+    // xyz nxnynz uv rgb
+    // position, normal, texture, color
+    glGenBuffers(1, vbo_ids);
     TEST_OPENGL_ERROR();
 
     // Bind the first VBO as the active one for GL_ARRAY_BUFFER operations
@@ -185,72 +131,34 @@ bool init_object(const mygl::program* p)
     // Upload the CPU vector in GPU memory
     // GL_STATIC_DRAW hints the GPU that you intend to draw multiples times and
     // he will choose the best way to optimize your code using that
-    glBufferData(GL_ARRAY_BUFFER, vertex_buffer_data.size() * sizeof(GLfloat),
-                 vertex_buffer_data.data(), GL_STATIC_DRAW);
+
+    // The buffer is organized like this:
+    // xyz nxnynz uv rgb
+
+    glBufferData(GL_ARRAY_BUFFER, obj_buffer.size() * sizeof(GLfloat),
+                 obj_buffer.data(), GL_STATIC_DRAW);
     TEST_OPENGL_ERROR();
 
-    // Tell the VAO how to read in the vertex_location
-    // read 3 GL_FLOAT per vectex
-    // with normalized: GL_FALSE
-    // stride: NO
-    glVertexAttribPointer(vertex_location, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    TEST_OPENGL_ERROR();
+    // xyz
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat),
+                          (void*)0);
+    glEnableVertexAttribArray(0);
 
-    // Enable the attribute VBO for the position attribute
-    glEnableVertexAttribArray(vertex_location);
-    TEST_OPENGL_ERROR();
+    // nxnynz
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat),
+                          (void*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
 
-    // Same process for the second VBO
-    // Make the VBO active for GL_ARRAY_BUFFER
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_ids[1]);
-    TEST_OPENGL_ERROR();
+    // uv
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat),
+                          (void*)(6 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
 
-    // Upload the CPU vector in GPU memory while giving GL_STATIC_DRAW
-    glBufferData(GL_ARRAY_BUFFER, normal_buffer_data.size() * sizeof(GLfloat),
-                 normal_buffer_data.data(), GL_STATIC_DRAW);
-    TEST_OPENGL_ERROR();
+    // rgb
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat),
+                          (void*)(8 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(3);
 
-    // How to read in the normal_location
-    glVertexAttribPointer(normal_location, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    TEST_OPENGL_ERROR();
-
-    // Enable the attribute VBO for the position attribute
-    glEnableVertexAttribArray(normal_location);
-    TEST_OPENGL_ERROR();
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_ids[2]);
-    TEST_OPENGL_ERROR();
-
-    // Upload the CPU vector in GPU memory while giving GL_STATIC_DRAW
-    glBufferData(GL_ARRAY_BUFFER, color_buffer_data.size() * sizeof(GLfloat),
-                 color_buffer_data.data(), GL_STATIC_DRAW);
-    TEST_OPENGL_ERROR();
-
-    // How to read in the normal_location
-    glVertexAttribPointer(color_location, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    TEST_OPENGL_ERROR();
-
-    // Enable the attribute VBO for the position attribute
-    glEnableVertexAttribArray(color_location);
-    TEST_OPENGL_ERROR();
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_ids[3]);
-    TEST_OPENGL_ERROR();
-
-    // Upload the CPU vector in GPU memory while giving GL_STATIC_DRAW
-    glBufferData(GL_ARRAY_BUFFER, texture_buffer_data.size() * sizeof(GLfloat),
-                 texture_buffer_data.data(), GL_STATIC_DRAW);
-    TEST_OPENGL_ERROR();
-
-    // How to read in the normal_location
-    glVertexAttribPointer(texture_location, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    TEST_OPENGL_ERROR();
-
-    // Enable the attribute VBO for the position attribute
-    glEnableVertexAttribArray(texture_location);
-    TEST_OPENGL_ERROR();
-
-    // Unbind the VAO while setting 0 (nothing)
     glBindVertexArray(0);
     return true;
 }
@@ -299,7 +207,7 @@ bool init_POV(const mygl::program* p)
     return true;
 }
 
-bool init_GLFW()
+bool init_GLFW(GLFWwindow** window)
 {
     if (!glfwInit())
         return false;
@@ -309,18 +217,20 @@ bool init_GLFW()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // required on macOS
 
-    window = glfwCreateWindow(1024, 1024, "TestOpenGL", NULL, NULL);
-    if (!window)
+    GLFWwindow* w = glfwCreateWindow(1024, 1024, "TestOpenGL", NULL, NULL);
+    if (!w)
     {
         glfwTerminate();
         return false;
     }
 
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(w);
+    *window = w;
+
     return true;
 }
 
-void display(const mygl::program* p)
+void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
 {
     // Clear the color and the depth
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -331,21 +241,36 @@ void display(const mygl::program* p)
     TEST_OPENGL_ERROR();
 
     // Get the uniformLocation of object_color
-    // GLint color_loc = glGetUniformLocation(p->program_id, "object_color");
-    // TEST_OPENGL_ERROR();
-    // if (color_loc == -1)
-    // {
-    //     std::cerr << "Uniform 'color_location' not found" << std::endl;
-    // }
+    GLint color_loc = glGetUniformLocation(p->program_id, "object_color");
+    TEST_OPENGL_ERROR();
+
+    if (color_loc == -1)
+    {
+        std::cerr << "Uniform 'color_location' not found" << std::endl;
+    }
 
     // // Upload a warm color fot the object
     // // This variable is used for the object as a fiffuse color in the
     // // lighting
-    // glUniform3f(color_loc, 0.95f, 0.4f, 0.f);
-    // TEST_OPENGL_ERROR();
+    glUniform3f(color_loc, 0.95f, 0.4f, 0.f);
+    TEST_OPENGL_ERROR();
+
+    GLint time_loc = glGetUniformLocation(p->program_id, "time");
+    TEST_OPENGL_ERROR();
+
+    if (color_loc == -1)
+    {
+        std::cerr << "Uniform 'time' not found" << std::endl;
+    }
+
+    // // Upload a warm color fot the object
+    // // This variable is used for the object as a fiffuse color in the
+    // // lighting
+    glUniform1f(time_loc, (float)glfwGetTime());
+    TEST_OPENGL_ERROR();
 
     // Set primitives
-    glDrawArrays(GL_TRIANGLES, 0, vertex_buffer_data.size() / 3);
+    glDrawArrays(GL_TRIANGLES, 0, vertex_count);
     TEST_OPENGL_ERROR();
 
     // Unbind the VAO
@@ -357,7 +282,16 @@ void display(const mygl::program* p)
     glfwPollEvents();
 }
 
-bool load_obj(const std::string& path)
+void process_input(GLFWwindow* window)
+{
+    // only handle escape key for now (what a garbage api)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(window, true);
+    }
+}
+
+bool load_obj(const std::string& path, std::vector<GLfloat>& result_buffer)
 {
     tinyobj::ObjReaderConfig reader_config;
     reader_config.mtl_search_path = "./"; // Path to material files
@@ -377,9 +311,6 @@ bool load_obj(const std::string& path)
     const auto& attrib = reader.GetAttrib();
     const auto& shapes = reader.GetShapes();
 
-    vertex_buffer_data.clear();
-    normal_buffer_data.clear();
-
     for (const auto& shape : shapes)
     {
         size_t index_offset = 0;
@@ -397,43 +328,40 @@ bool load_obj(const std::string& path)
                         shape.mesh.indices[index_offset + corner];
 
                     // Position
-                    vertex_buffer_data.push_back(
+                    result_buffer.push_back(
                         attrib.vertices[3 * idx.vertex_index + 0]);
-                    vertex_buffer_data.push_back(
+                    result_buffer.push_back(
                         attrib.vertices[3 * idx.vertex_index + 1]);
-                    vertex_buffer_data.push_back(
+                    result_buffer.push_back(
                         attrib.vertices[3 * idx.vertex_index + 2]);
 
-                    // Normal (fall back to up-vector if absent)
                     if (idx.normal_index >= 0)
                     {
-                        normal_buffer_data.push_back(
+                        result_buffer.push_back(
                             attrib.normals[3 * idx.normal_index + 0]);
-                        normal_buffer_data.push_back(
+                        result_buffer.push_back(
                             attrib.normals[3 * idx.normal_index + 1]);
-                        normal_buffer_data.push_back(
+                        result_buffer.push_back(
                             attrib.normals[3 * idx.normal_index + 2]);
                     }
                     else
-                    {
-                        normal_buffer_data.push_back(0.f);
-                        normal_buffer_data.push_back(1.f);
-                        normal_buffer_data.push_back(0.f);
-                    }
+                        return false;
 
                     if (idx.texcoord_index >= 0)
                     {
-                        texture_buffer_data.push_back(
+                        result_buffer.push_back(
                             attrib.texcoords[2 * idx.texcoord_index + 0]);
-                        texture_buffer_data.push_back(
+                        result_buffer.push_back(
                             attrib.texcoords[2 * idx.texcoord_index + 1]);
                     }
+                    else
+                        return false;
 
-                    color_buffer_data.push_back(
+                    result_buffer.push_back(
                         attrib.colors[3 * idx.vertex_index + 0]);
-                    color_buffer_data.push_back(
+                    result_buffer.push_back(
                         attrib.colors[3 * idx.vertex_index + 1]);
-                    color_buffer_data.push_back(
+                    result_buffer.push_back(
                         attrib.colors[3 * idx.vertex_index + 2]);
                 }
             }
@@ -441,7 +369,7 @@ bool load_obj(const std::string& path)
         }
     }
 
-    return !vertex_buffer_data.empty();
+    return true;
 }
 
 int main(int argc, char* argv[])
@@ -452,15 +380,18 @@ int main(int argc, char* argv[])
         return 2;
     }
 
-    if (!load_obj(argv[1]))
+    // xyz nxnynz uv rgb
+    std::vector<GLfloat> obj_buffer;
+
+    if (!load_obj(argv[1], obj_buffer))
     {
         std::cerr << "Wrong obj file\n";
         return 3;
     }
 
     // Create GL window and context
-
-    init_GLFW();
+    GLFWwindow* window;
+    init_GLFW(&window);
 
     // Loads GL functions pointers
     if (!init_glew())
@@ -473,13 +404,17 @@ int main(int argc, char* argv[])
 
     if (!init_shaders(&p))
         return 1;
-    if (!init_object(p))
+    if (!init_object(obj_buffer))
         return 1;
     if (!init_POV(p))
         return 1;
 
     while (!glfwWindowShouldClose(window))
-        display(p);
+    {
+        process_input(window);
+
+        display(p, window, obj_buffer.size() / 11);
+    }
 
     delete p;
     glfwTerminate();
