@@ -1,3 +1,4 @@
+#include <cmath>
 #ifdef __APPLE__
 #    define GL_SILENCE_DEPRECATION
 #endif
