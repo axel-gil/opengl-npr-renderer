@@ -1,7 +1,7 @@
 #pragma once
 
 #include "program.hh"
-#include <GL/gl.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 class Camera
