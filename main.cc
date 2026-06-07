@@ -295,15 +295,6 @@ void display(const mygl::program* p, GLFWwindow* window, size_t vertex_count)
     glfwPollEvents();
 }
 
-void process_input(GLFWwindow* window)
-{
-    // only handle escape key for now (what a garbage api)
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
-}
-
 bool load_obj(const std::string& path, std::vector<GLfloat>& result_buffer)
 {
     tinyobj::ObjReaderConfig reader_config;
@@ -428,8 +419,6 @@ int main(int argc, char* argv[])
 
     while (!glfwWindowShouldClose(window))
     {
-        process_input(window);
-
         camera.update_camera(p);
 
         display(p, window, obj_buffer.size() / 11);
