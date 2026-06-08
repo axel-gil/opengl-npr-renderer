@@ -5,3 +5,8 @@
 **main
 main.dSYM/
 compile_commands.json
+**bin
+license.txt
+textures/*.png
+textures/*.jpeg
+textures/*.jpg
