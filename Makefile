@@ -18,6 +18,7 @@ SRC = main.cc \
 	  src/camera.cc \
 	  src/init_gl.cc \
 	  src/vector3.cc \
+	  src/object.cc \
 		src/utils.cc
 
 OBJ = $(SRC:.cc=.o)

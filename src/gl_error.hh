@@ -1,3 +1,6 @@
+#pragma once
+#include <iostream>
+
 #define TEST_OPENGL_ERROR()                                                    \
     do                                                                         \
     {                                                                          \

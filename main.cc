@@ -17,32 +17,16 @@
 
 #include "init_gl.hh"
 #include "utils.hh"
+#include "object.hh"
 
-// Globals
-GLuint vao_id;
-
-static mygl::Matrix4 update(float time)
-{
-    float flicker_y = 1 + 0.15f * sin(time * 15.0f);
-    float flicker_x = 1 + 0.05f * sin(time * 17.0f);
-
-    mygl::Matrix4 t = mygl::translate(0.0f, 0.5f, 0.0f);
-    mygl::Matrix4 s = mygl::scale(flicker_x, flicker_y, flicker_x);
-    t *= s;
-
-    return t;
-}
-
-void display(const mygl::program* p, GLFWwindow* window, Camera& camera,
-             size_t vertex_count, GLuint tex)
+void display(const mygl::program* p, GLFWwindow* window,
+             std::vector<Object> objects)
 {
     // Clear the color and the depth
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     TEST_OPENGL_ERROR();
 
-    // Activate the VAO
-    glBindVertexArray(vao_id);
-    TEST_OPENGL_ERROR();
+    float time = (float)glfwGetTime();
 
     GLint time_loc = glGetUniformLocation(p->program_id, "time");
     TEST_OPENGL_ERROR();
@@ -52,32 +36,14 @@ void display(const mygl::program* p, GLFWwindow* window, Camera& camera,
             std::cerr << "Uniform 'time' not found" << std::endl;
         }*/
 
-    // Upload a warm color fot the object
-    // This variable is used for the object as a fiffuse color in the
-    // lighting
-    float time = (float)glfwGetTime();
     glUniform1f(time_loc, time);
     TEST_OPENGL_ERROR();
-    GLint model_loc = glGetUniformLocation(p->program_id, "model_view");
 
-    mygl::Matrix4 flame_model_matrix = camera.get_view();
-    flame_model_matrix *= update(time);
-
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE,
-                       flame_model_matrix.get_data().data());
-
-    // Set the textures
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glUniform1i(glGetUniformLocation(p->program_id, "tex_diffuse"), 0);
-
-    // Set primitives
-    glDrawArrays(GL_TRIANGLES, 0, vertex_count);
-    TEST_OPENGL_ERROR();
-
-    // Unbind the VAO
-    glBindVertexArray(0);
-    TEST_OPENGL_ERROR();
+    for (const auto& object : objects)
+    {
+        // object.bounce(time);
+        object.display();
+    }
 
     // Swaps the buffers
     glfwSwapBuffers(window);
@@ -117,21 +83,26 @@ int main(int argc, char* argv[])
 
     if (!init_shaders(&p))
         return 1;
-    if (!init_object(obj_buffer, &vao_id))
-        return 1;
+
     if (!init_POV(p))
         return 1;
 
     GLuint tex = load_texture(
         "textures/tripo_mat_0fd31f00-a609-4dff-92d1-6f84a6da7224_diffuse.jpeg");
-
     Camera camera = Camera(window);
+
+    Object house{ obj_buffer, tex, p, &camera };
+
+    if (!house.init())
+        return 1;
+
+    std::vector<Object> objects = { house };
 
     while (!glfwWindowShouldClose(window))
     {
         camera.update_camera(p);
 
-        display(p, window, camera, obj_buffer.size() / 11, tex);
+        display(p, window, objects);
     }
 
     delete p;
