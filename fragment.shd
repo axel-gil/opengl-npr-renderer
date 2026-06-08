@@ -1,7 +1,8 @@
 #version 410 core
 
-in vec3 normal;
+in vec3 v_normal;
 in vec2 uv;
+in vec3 vcolor;
 
 uniform sampler2D tex_diffuse;
 uniform vec3 light_dir;
@@ -10,4 +11,16 @@ out vec4 frag_color;
 
 void main()
 {
-    frag_color = texture(tex_diffuse, uv);}
+    vec3 N = normalize(v_normal);
+    vec3 L = normalize(light_dir);
+
+    vec3 base = texture(tex_diffuse, uv).rgb * vcolor;
+
+    float ndl = max(dot(N, L), 0.0);
+    float band;
+    if      (ndl > 0.6)  band = 1.0;
+    else if (ndl > 0.25) band = 0.7;
+    else                 band = 0.45;
+
+    frag_color = vec4(base * band, 1.0);
+}

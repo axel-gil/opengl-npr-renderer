@@ -133,7 +133,7 @@ bool init_POV(const mygl::program* p)
     // FOV of 90
     float fovy = 90.0f * M_PI / 180.0f;
     float aspect = 1920.0 / 1080;
-    float znear = 0.1f, zfar = 100.0f;
+    float znear = 0.1f, zfar = 10000.0f;
 
     float top = znear * std::tan(fovy * 0.5f);
     float bottom = -top;

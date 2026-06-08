@@ -7,12 +7,12 @@
 
 Camera::Camera(GLFWwindow* window)
     : window_(window)
-    , cam_eye_{ 0.0f, 1.5f, -4.0f }
+    , cam_eye_{ 0.0f, 18.f, -40.0f }
     , cam_center_{ 1.0f, 1.5f, 0.0f }
     , cam_yaw_(1.5708f)
     , cam_pitch_(0.0f)
-    , cam_speed_(0.05f)
-    , cam_rot_speed_(0.02f)
+    , cam_speed_(25.0f)
+    , cam_rot_speed_(0.04f)
     , last_mouse_x_(0.0f)
     , last_mouse_y_(0.0f)
     , mouse_init_(true)

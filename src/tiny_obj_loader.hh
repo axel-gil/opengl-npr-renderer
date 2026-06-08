@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 The MIT License (MIT)
 
@@ -16931,4 +16933,11 @@ static inline void parseV(real_t *x, real_t *y, real_t *z, real_t *w,
 
 #endif
 
-bool load_obj(const std::string& path, std::vector<float>& result_buffer);
+
+struct Mesh
+{
+    std::vector<GLfloat> buffer;
+    std::string texture_path;
+};
+
+bool load_obj(const std::string& path, std::vector<Mesh>& meshes);
