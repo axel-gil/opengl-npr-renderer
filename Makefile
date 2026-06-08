@@ -3,6 +3,7 @@ platform=$(shell uname -o)
 ifeq ($(platform),Darwin)
 CC = clang++
 CXX = clang++
+CXXFLAGS += -fcolor-diagnostics
 else
 CC = g++
 endif
