@@ -114,18 +114,20 @@ int main(int argc, char* argv[])
     init_GL();
 
     mygl::program* p = nullptr;
+    init_shaders(&p);
     if (!init_shaders(&p))
-        return 1;
-    init_POV(p);
-
-    mygl::program* outline = mygl::program::makeprogram("outline_vertex.shd",
-                                                        "outline_fragment.shd");
-    if (!outline->is_ready())
     {
-        std::cerr << outline->get_log();
+        std::cerr << "Error while loading shader\n";
         return 1;
     }
-    outline->use();
+    init_POV(p);
+
+    mygl::program* outline = nullptr;
+    if (!init_shaders(&outline, "outline"))
+    {
+        std::cerr << "Error while loading outline shader\n";
+        return 1;
+    }
     init_POV(outline);
 
     std::vector<Mesh> meshes;

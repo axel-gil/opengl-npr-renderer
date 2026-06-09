@@ -49,7 +49,7 @@ bool init_shaders(mygl::program** p, std::string shader_name)
 {
     if (shader_name.size() > 0)
     {
-        shader_name.insert(0, "_");
+        shader_name.append("_");
     }
     mygl::program* program =
         mygl::program::makeprogram("shaders/" + shader_name + "vertex.shd",
