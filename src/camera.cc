@@ -11,7 +11,7 @@ Camera::Camera(GLFWwindow* window)
     , cam_center_{ 1.0f, 1.5f, 0.0f }
     , cam_yaw_(1.5708f)
     , cam_pitch_(0.0f)
-    , cam_speed_(25.0f)
+    , cam_speed_(0.2f)
     , cam_rot_speed_(0.04f)
     , last_mouse_x_(0.0f)
     , last_mouse_y_(0.0f)

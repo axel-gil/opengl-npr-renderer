@@ -13,6 +13,7 @@
 #include "init_gl.hh"
 #include "object.hh"
 #include "billboard.hh"
+#include "utils.hh"
 
 struct GpuMesh
 {
@@ -56,18 +57,6 @@ static GLuint white_tex()
                  px);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    return t;
-}
-
-static mygl::Matrix4 update(float time)
-{
-    float flicker_y = 1 + 0.15f * sin(time * 15.0f);
-    float flicker_x = 1 + 0.05f * sin(time * 17.0f);
-
-    mygl::Matrix4 t = mygl::translate(0.0f, 0.5f, 0.0f);
-    mygl::Matrix4 s = mygl::scale(flicker_x, flicker_y, flicker_x);
-    t *= s;
-
     return t;
 }
 
@@ -127,13 +116,11 @@ void display(const mygl::program* p, GLFWwindow* window, Camera& camera,
 
 int main(int argc, char* argv[])
 {
-    (void)argc;
-    (void)argv;
-    // if (argc != 2)
-    // {
-    //     std::cerr << "Wrong usage: ./main <file.obj>\n";
-    //     return 2;
-    // }
+    if (argc != 2)
+    {
+        std::cerr << "Wrong usage: ./main <file.obj>\n";
+        return 2;
+    }
 
     GLFWwindow* window;
     if (!init_GLFW(&window))
@@ -188,7 +175,7 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         TEST_OPENGL_ERROR();
         camera.update_camera(p);
-        display(p, window, camera, gpu);
+        // display(p, window, camera, gpu);
         billboard.update_particles();
 
         billboard.display();

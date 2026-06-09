@@ -22,7 +22,7 @@ void Fire::spawn()
 
     life_ = 1.0f + (fast_rand() % 2000) / 2000.0f;
     max_life_ = life_;
-    size_ = 5.0f * (fast_rand() % 2000) / 20000.0f;
+    size_ = 3.0f * (fast_rand() % 2000) / 20000.0f;
     color_ = { 255, 80, 0, 180 };
     alive_ = true;
 }
