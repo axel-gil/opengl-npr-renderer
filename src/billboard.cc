@@ -187,6 +187,7 @@ bool Billboard<T>::display()
 
     // re-enable depth mask
     glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 
     return true;
 }

@@ -1,4 +1,5 @@
 #include "fire.hh"
+#include <cmath>
 
 void Fire::spawn()
 {

@@ -70,7 +70,6 @@ void display(const Program* p, const Program* outline, GLFWwindow* window,
 
     mygl::Matrix4 view = camera.get_view();
 
-    // ---- Passe 1 : coque de contour, faces AVANT cullées ----
     outline->use();
     glUniformMatrix4fv(
         glGetUniformLocation(outline->get_program_id(), "model_view"), 1,
@@ -85,7 +84,6 @@ void display(const Program* p, const Program* outline, GLFWwindow* window,
         glDrawArrays(GL_TRIANGLES, 0, g.count);
     }
 
-    // ---- Passe 2 : objet normal, faces ARRIÈRE cullées ----
     p->use();
     glCullFace(GL_BACK);
     GLint tex_loc = glGetUniformLocation(p->get_program_id(), "tex_diffuse");
@@ -99,8 +97,6 @@ void display(const Program* p, const Program* outline, GLFWwindow* window,
     }
 
     glBindVertexArray(0);
-    glfwSwapBuffers(window);
-    glfwPollEvents();
 }
 
 int main(int argc, char* argv[])
@@ -180,18 +176,17 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         TEST_OPENGL_ERROR();
         camera.update_camera(fire.get());
-        fire->use();
-        // display(p, window, camera, gpu);
-        billboard.update_particles();
+        camera.update_camera(color.get());
+        camera.update_camera(outline.get());
 
+        fire->use();
+        billboard.update_particles();
         billboard.display();
-        // display(p, window, objects);
+
+        display(color.get(), outline.get(), window, camera, gpu);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-        //   color->use();
-        //   camera.update_camera(color.get());
-        //   display(color.get(), outline.get(), window, camera, gpu);
     }
 
     glfwTerminate();
