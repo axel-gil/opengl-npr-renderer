@@ -9,6 +9,7 @@ Billboard::Billboard(std::vector<GLfloat> vertex_buffer_data,
     , g_vertex_buffer_data(vertex_buffer_data)
     , g_particule_position_size_data(max_particles * 4, 0)
     , g_particule_color_data(max_particles * 4, 0)
+    , particle_per_frame_(1)
     , max_particles_(max_particles)
     , last_time(static_cast<float>(glfwGetTime()))
 {
@@ -46,34 +47,6 @@ Billboard::Billboard(std::vector<GLfloat> vertex_buffer_data,
 
 bool Billboard::init_particles()
 {
-    for (size_t i = 0; i < max_particles_; i++)
-    {
-        float angle = static_cast<float>(i);
-        Particle& p = particles[i];
-
-        p = Particle{
-            mygl::Vector3{ 0, 0, 0 }, // origin
-            mygl::Vector3{ angle, 1, -angle / 2 }, // angled velocity
-            Color{ 255, 0, 0, 127 }, // red color
-            5, // 5 seconds liveness
-            10 // size of 10 (random)
-        };
-
-        // position, useless cause vector is 0 initialized
-        g_particule_position_size_data[i * 4 + 0] = p.get_pos().get_x();
-        g_particule_position_size_data[i * 4 + 1] = p.get_pos().get_y();
-        g_particule_position_size_data[i * 4 + 2] = p.get_pos().get_z();
-
-        // size
-        g_particule_position_size_data[i * 4 + 3] = p.get_size();
-
-        // color
-        g_particule_color_data[i * 4 + 0] = p.get_color().r;
-        g_particule_color_data[i * 4 + 1] = p.get_color().g;
-        g_particule_color_data[i * 4 + 2] = p.get_color().b;
-        g_particule_color_data[i * 4 + 3] = p.get_color().a;
-    }
-
     glBindVertexArray(vao_id);
     TEST_OPENGL_ERROR();
 
@@ -98,7 +71,7 @@ bool Billboard::init_particles()
     TEST_OPENGL_ERROR();
     glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
     TEST_OPENGL_ERROR();
-    glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0,
+    glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0,
                           static_cast<void*>(0));
     TEST_OPENGL_ERROR();
 
@@ -118,9 +91,23 @@ void Billboard::update_particles()
     float dt = current_time - last_time;
     last_time = current_time;
 
+    for (size_t i = 0; i < particle_per_frame_; i++)
+    {
+        particles[current_index_].spawn();
+        current_index_ = (current_index_ + 1) % max_particles_;
+    }
+
     for (size_t i = 0; i < max_particles_; i++)
     {
         Particle& p = particles[i];
+
+        if (!p.is_alive())
+        {
+            // a channel to 0, make particule invisible
+            g_particule_color_data[i * 4 + 3] = 0;
+            continue;
+        }
+
         p.update(dt);
 
         // position
