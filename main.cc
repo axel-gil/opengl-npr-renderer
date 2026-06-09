@@ -60,60 +60,44 @@ static GLuint white_tex()
     return t;
 }
 
-void display(const mygl::program* p, GLFWwindow* window, Camera& camera,
-             std::vector<GpuMesh> gpu)
+void display(const mygl::program* p, const mygl::program* outline,
+             GLFWwindow* window, Camera& camera,
+             const std::vector<GpuMesh>& gpu)
 {
-    // Clear the color and the depth
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    TEST_OPENGL_ERROR();
 
-    float time = (float)glfwGetTime();
+    mygl::Matrix4 view = camera.get_view();
 
-    // GLint time_loc = glGetUniformLocation(p->program_id, "time");
-    TEST_OPENGL_ERROR();
-
-    /*
-    if (time_loc == -1)
-    {
-        std::cerr << "Uniform 'time' not found" << std::endl;
-    }*/
-
-    // glUniform1f(time_loc, time);
-    TEST_OPENGL_ERROR();
-
-    mygl::Matrix4 flame_model_matrix = camera.get_view();
-
-    // Bounce
-    /*
-    flame_model_matrix *= update(time);
-
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE,
-                       flame_model_matrix.get_data().data());
-                       */
-
-    glUniform1i(glGetUniformLocation(p->program_id, "tex_diffuse"), 0);
-
-    // Set primitives
-    GLint tex_loc = glGetUniformLocation(p->program_id, "tex_diffuse");
+    // ---- Passe 1 : coque de contour, faces AVANT cullées ----
+    outline->use();
+    glUniformMatrix4fv(glGetUniformLocation(outline->program_id, "model_view"),
+                       1, GL_FALSE, view.get_data().data());
+    glUniform1f(glGetUniformLocation(outline->program_id, "outline_width"),
+                0.05f);
+    glCullFace(GL_FRONT);
     for (const auto& g : gpu)
     {
-        glActiveTexture(GL_TEXTURE0);
+        glBindVertexArray(g.vao);
+        glDrawArrays(GL_TRIANGLES, 0, g.count);
+    }
+
+    // ---- Passe 2 : objet normal, faces ARRIÈRE cullées ----
+    p->use();
+    glCullFace(GL_BACK);
+    GLint tex_loc = glGetUniformLocation(p->program_id, "tex_diffuse");
+    glActiveTexture(GL_TEXTURE0);
+    for (const auto& g : gpu)
+    {
         glBindTexture(GL_TEXTURE_2D, g.tex);
         glUniform1i(tex_loc, 0);
         glBindVertexArray(g.vao);
         glDrawArrays(GL_TRIANGLES, 0, g.count);
     }
-    TEST_OPENGL_ERROR();
 
-    // Unbind the VAO
     glBindVertexArray(0);
-    TEST_OPENGL_ERROR();
-
-    // Swaps the buffers
     glfwSwapBuffers(window);
     glfwPollEvents();
 }
-
 int main(int argc, char* argv[])
 {
     if (argc != 2)
@@ -132,8 +116,17 @@ int main(int argc, char* argv[])
     mygl::program* p = nullptr;
     if (!init_shaders(&p))
         return 1;
-    if (!init_POV(p))
+    init_POV(p);
+
+    mygl::program* outline = mygl::program::makeprogram("outline_vertex.shd",
+                                                        "outline_fragment.shd");
+    if (!outline->is_ready())
+    {
+        std::cerr << outline->get_log();
         return 1;
+    }
+    outline->use();
+    init_POV(outline);
 
     std::vector<Mesh> meshes;
     if (!load_obj(argv[1], meshes))
@@ -183,6 +176,9 @@ int main(int argc, char* argv[])
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+        // p->use();
+        // camera.update_camera(p);
+        // display(p, outline, window, camera, gpu);
     }
 
     delete p;

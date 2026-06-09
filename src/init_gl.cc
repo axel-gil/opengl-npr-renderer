@@ -169,10 +169,10 @@ bool init_POV(const mygl::program* p)
     if (light_loc == -1)
     {
         std::cerr << "Uniform 'light_dir' not found" << std::endl;
+        glUniform3f(light_loc, 1.0f, 1.0f, 1.0f);
     }
 
     // Set light position
-    glUniform3f(light_loc, 1.0f, 1.0f, 1.0f);
     TEST_OPENGL_ERROR();
 
     return true;
