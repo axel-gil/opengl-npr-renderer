@@ -4,13 +4,14 @@
 #include "vector3.hh"
 #include "gl_error.hh"
 
-Billboard::Billboard(std::vector<GLfloat> vertex_buffer_data,
-                     size_t max_particles)
+template <ParticleDerived T>
+Billboard<T>::Billboard(std::vector<GLfloat> vertex_buffer_data,
+                        size_t max_particles)
     : particles(max_particles)
     , g_vertex_buffer_data(vertex_buffer_data)
     , g_particule_position_size_data(max_particles * 4, 0)
     , g_particule_color_data(max_particles * 4, 0)
-    , particle_per_frame_(100)
+    , particle_per_frame_(2)
     , max_particles_(max_particles)
     , last_time(static_cast<float>(glfwGetTime()))
 {
@@ -46,7 +47,8 @@ Billboard::Billboard(std::vector<GLfloat> vertex_buffer_data,
     TEST_OPENGL_ERROR();
 }
 
-bool Billboard::init_particles()
+template <ParticleDerived T>
+bool Billboard<T>::init_particles()
 {
     glBindVertexArray(vao_id);
     TEST_OPENGL_ERROR();
@@ -86,7 +88,8 @@ bool Billboard::init_particles()
     return true;
 }
 
-void Billboard::update_particles()
+template <ParticleDerived T>
+void Billboard<T>::update_particles()
 {
     float current_time = static_cast<float>(glfwGetTime());
     float dt = current_time - last_time;
@@ -98,34 +101,39 @@ void Billboard::update_particles()
         current_index_ = (current_index_ + 1) % max_particles_;
     }
 
-    // size_t alive_count = 0;
+    alive_count_ = 0;
 
     for (size_t i = 0; i < max_particles_; i++)
     {
-        Particle& p = particles[i];
+        T& p = particles[i];
 
         if (!p.is_alive())
-        {
-            // a channel to 0, make particule invisible
-            g_particule_color_data[i * 4 + 3] = 0;
             continue;
-        }
 
         p.update(dt);
 
+        // particle is dying this frame
+        if (!p.is_alive())
+            continue;
+
         // position
-        g_particule_position_size_data[i * 4 + 0] = p.get_pos().get_x();
-        g_particule_position_size_data[i * 4 + 1] = p.get_pos().get_y();
-        g_particule_position_size_data[i * 4 + 2] = p.get_pos().get_z();
+        g_particule_position_size_data[alive_count_ * 4 + 0] =
+            p.get_pos().get_x();
+        g_particule_position_size_data[alive_count_ * 4 + 1] =
+            p.get_pos().get_y();
+        g_particule_position_size_data[alive_count_ * 4 + 2] =
+            p.get_pos().get_z();
 
         // size
-        g_particule_position_size_data[i * 4 + 3] = p.get_size();
+        g_particule_position_size_data[alive_count_ * 4 + 3] = p.get_size();
 
         // color
-        g_particule_color_data[i * 4 + 0] = p.get_color().r;
-        g_particule_color_data[i * 4 + 1] = p.get_color().g;
-        g_particule_color_data[i * 4 + 2] = p.get_color().b;
-        g_particule_color_data[i * 4 + 3] = p.get_color().a;
+        g_particule_color_data[alive_count_ * 4 + 0] = p.get_color().r;
+        g_particule_color_data[alive_count_ * 4 + 1] = p.get_color().g;
+        g_particule_color_data[alive_count_ * 4 + 2] = p.get_color().b;
+        g_particule_color_data[alive_count_ * 4 + 3] = p.get_color().a;
+
+        alive_count_++;
     }
 
     glBindVertexArray(vao_id);
@@ -136,7 +144,7 @@ void Billboard::update_particles()
     glBufferData(GL_ARRAY_BUFFER, max_particles_ * 4 * sizeof(GLfloat), nullptr,
                  GL_STREAM_DRAW); // Buffer orphaning
     TEST_OPENGL_ERROR();
-    glBufferSubData(GL_ARRAY_BUFFER, 0, max_particles_ * 4 * sizeof(GLfloat),
+    glBufferSubData(GL_ARRAY_BUFFER, 0, alive_count_ * 4 * sizeof(GLfloat),
                     g_particule_position_size_data.data());
     TEST_OPENGL_ERROR();
 
@@ -145,12 +153,13 @@ void Billboard::update_particles()
     glBufferData(GL_ARRAY_BUFFER, max_particles_ * 4 * sizeof(GLubyte), nullptr,
                  GL_STREAM_DRAW); // Buffer orphaning
     TEST_OPENGL_ERROR();
-    glBufferSubData(GL_ARRAY_BUFFER, 0, max_particles_ * 4 * sizeof(GLubyte),
+    glBufferSubData(GL_ARRAY_BUFFER, 0, alive_count_ * 4 * sizeof(GLubyte),
                     g_particule_color_data.data());
     TEST_OPENGL_ERROR();
 }
 
-bool Billboard::display()
+template <ParticleDerived T>
+bool Billboard<T>::display()
 {
     glBindVertexArray(vao_id);
     TEST_OPENGL_ERROR();
@@ -170,7 +179,7 @@ bool Billboard::display()
     glDepthMask(GL_FALSE);
     TEST_OPENGL_ERROR();
 
-    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, max_particles_);
+    glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, alive_count_);
     TEST_OPENGL_ERROR();
 
     // re-enable depth mask
@@ -178,3 +187,5 @@ bool Billboard::display()
 
     return true;
 }
+
+template class Billboard<Fire>;

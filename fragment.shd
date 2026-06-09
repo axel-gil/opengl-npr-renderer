@@ -1,15 +1,18 @@
 #version 410 core
 
 in vec4 vColor;
+in vec2 particle_uv;
+
 uniform vec3 light_dir;
 
 out vec4 FragColor;
 
 void main()
 {
-    // simple lighting factor (optional)
-    // float intensity = max(dot(normalize(light_dir), vec3(0, 0, 1)), 0.2);
+    float dist = length(particle_uv);
+    
+    if (dist > 0.5)
+        discard;
 
-    // FragColor = vec4(vColor.rgb, vColor.a);
     FragColor = vColor;
 }
