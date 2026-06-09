@@ -18,6 +18,7 @@
 #include "init_gl.hh"
 #include "utils.hh"
 #include "object.hh"
+#include "billboard.hh"
 
 struct GpuMesh
 {
@@ -132,11 +133,13 @@ void display(const mygl::program* p, GLFWwindow* window, Camera& camera,
 
 int main(int argc, char* argv[])
 {
-    if (argc != 2)
-    {
-        std::cerr << "Wrong usage: ./main <file.obj>\n";
-        return 2;
-    }
+    (void)argc;
+    (void)argv;
+    // if (argc != 2)
+    // {
+    //     std::cerr << "Wrong usage: ./main <file.obj>\n";
+    //     return 2;
+    // }
 
     GLFWwindow* window;
     if (!init_GLFW(&window))
@@ -179,12 +182,31 @@ int main(int argc, char* argv[])
         gpu.push_back(
             { make_vao(m.buffer), (GLsizei)(m.buffer.size() / 11), tex });
     }
+    std::vector<Object> objects = {};
+
+    static const std::vector<GLfloat> g_vertex_buffer_data = {
+        -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f,
+        -0.5f, 0.5f,  0.0f, 0.5f, 0.5f,  0.0f,
+    };
+
+    static const size_t max_particles = 10;
+    Billboard billboard{ g_vertex_buffer_data, max_particles };
+    billboard.init_particles();
 
     Camera camera(window);
     while (!glfwWindowShouldClose(window))
     {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        TEST_OPENGL_ERROR();
         camera.update_camera(p);
         display(p, window, camera, gpu);
+        billboard.update_particles();
+
+        billboard.display();
+        // display(p, window, objects);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 
     delete p;

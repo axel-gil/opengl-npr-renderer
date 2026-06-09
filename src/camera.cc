@@ -129,7 +129,9 @@ void Camera::update_camera(const mygl::program* p)
                         cam_center_[1], cam_center_[2], 0.0f, 1.0f, 0.0f);
 
     GLint view_loc = glGetUniformLocation(p->program_id, "model_view");
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, view.get_data().data());
+
+    if (view_loc != -1)
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, view.get_data().data());
 }
 
 mygl::Matrix4 Camera::get_view()
