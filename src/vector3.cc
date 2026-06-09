@@ -102,6 +102,15 @@ namespace mygl
         return *this;
     }
 
+    Vector3& Vector3::operator*=(const Vector3& r)
+    {
+        x_ *= r.x_;
+        y_ *= r.y_;
+        z_ *= r.z_;
+
+        return *this;
+    }
+
     std::ostream& operator<<(std::ostream& os, const Vector3& v)
     {
         os << "x: " << v.x_ << ", y: " << v.y_ << ", z: " << v.z_;

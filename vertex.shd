@@ -9,6 +9,7 @@ uniform mat4 projection;
 uniform vec3 light_dir;
 
 out vec4 vColor;
+out vec2 particle_uv;
 
 void main()
 {
@@ -27,4 +28,5 @@ void main()
     gl_Position = projection * model_view * vec4(worldPos, 1.0);
 
     vColor = particleColor;
+    particle_uv = vertexPosition.xy;
 }

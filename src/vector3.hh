@@ -28,6 +28,8 @@ namespace mygl
 
         Vector3& operator+=(const Vector3& r);
         Vector3& operator-=(const Vector3& r);
+        Vector3& operator*=(const Vector3& r);
+
         friend std::ostream& operator<<(std::ostream& os, const Vector3& v);
 
     protected:

@@ -22,6 +22,7 @@ SRC = main.cc \
 	  src/billboard.cc \
 	  src/color.cc \
 	  src/particle.cc \
+	  src/fire.cc \
 		src/utils.cc
 
 OBJ = $(SRC:.cc=.o)

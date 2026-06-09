@@ -1,4 +1,5 @@
 #include "particle.hh"
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 
@@ -17,25 +18,27 @@ Particle::Particle(mygl::Vector3 pos, mygl::Vector3 vel, const Color& color,
     , vel_(std::move(vel))
     , color_(color)
     , life_(life)
+    , max_life_(life)
     , size_(size)
 {}
 
-void Particle::spawn()
+uint32_t Particle::fast_rand()
 {
-    pos_ = { 0, 0, 0 };
+    // seed
+    static uint32_t rng_state_ = 42;
 
-    vel_ = {
-        (rand() % 2000 - 1000.0f) / 10000.0f,
-        (rand() % 2000 - 1000.0f) / 10000.0f,
-        (rand() % 2000 - 1000.0f) / 10000.0f,
-    };
+    rng_state_ ^= rng_state_ << 13;
+    rng_state_ ^= rng_state_ >> 17;
+    rng_state_ ^= rng_state_ << 5;
+    return rng_state_;
+}
 
-    vel_ += { 0, 0.5f, 0 };
+void Particle::spawn()
+{}
 
-    color_ = { 255, 255, 255, 200 };
-    life_ = 5.0f;
-    size_ = 0.05f;
-    alive_ = true;
+void Particle::update(float dt)
+{
+    (void)dt;
 }
 
 const mygl::Vector3& Particle::get_pos() const
@@ -56,23 +59,4 @@ float Particle::get_size() const
 bool Particle::is_alive() const
 {
     return alive_;
-}
-
-void Particle::update(float dt)
-{
-    if (life_ <= 0)
-    {
-        alive_ = false;
-        return;
-    }
-
-    life_ -= dt;
-    pos_ += vel_ * dt;
-    color_.b -= dt * 30;
-    color_.g -= dt * 20;
-
-    // std::cout << static_cast<int>(color_.b) << '\n';
-    // std::cout << color_.r << ", " << color_.g << ", " << color_.b << '\n';
-
-    // std::cout << "life: " << life_ << ", pos: " << pos_ << "\n";
 }

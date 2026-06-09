@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "fire.hh"
 #include "gl_error.hh"
 #include "matrix4.hh"
 #include "transformation.hh"
@@ -190,7 +191,7 @@ int main(int argc, char* argv[])
     };
 
     static const size_t max_particles = 1000000;
-    Billboard billboard{ g_vertex_buffer_data, max_particles };
+    Billboard<Fire> billboard{ g_vertex_buffer_data, max_particles };
     billboard.init_particles();
 
     Camera camera(window);
