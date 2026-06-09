@@ -45,10 +45,15 @@ void init_GL()
 }
 
 // Init the shaders
-bool init_shaders(mygl::program** p)
+bool init_shaders(mygl::program** p, std::string shader_name)
 {
+    if (shader_name.size() > 0)
+    {
+        shader_name.insert(0, "_");
+    }
     mygl::program* program =
-        mygl::program::makeprogram("vertex.shd", "fragment.shd");
+        mygl::program::makeprogram("shaders/" + shader_name + "vertex.shd",
+                                   "shaders/" + shader_name + "fragment.shd");
     *p = program;
 
     // Use the program in the rendering state
@@ -67,7 +72,7 @@ bool init_shaders(mygl::program** p)
 }
 
 // Init the global
-bool init_object(const std::vector<GLfloat>& obj_buffer, GLuint* vao_id)
+void init_object(const std::vector<GLfloat>& obj_buffer, GLuint* vao_id)
 {
     // Generate 1 vertex array
     // The name is stored in vao_id (global variable)
@@ -122,10 +127,9 @@ bool init_object(const std::vector<GLfloat>& obj_buffer, GLuint* vao_id)
     glEnableVertexAttribArray(3);
 
     glBindVertexArray(0);
-    return true;
 }
 
-bool init_POV(const mygl::program* p)
+void init_POV(const mygl::program* p)
 {
     mygl::Matrix4 view =
         mygl::lookat(0.0f, 1.5f, -4.0f, 1.0f, 1.5f, 0.0f, 0.0f, 1.0f, 0.0f);
@@ -168,14 +172,11 @@ bool init_POV(const mygl::program* p)
     TEST_OPENGL_ERROR();
     if (light_loc == -1)
     {
-        std::cerr << "Uniform 'light_dir' not found" << std::endl;
         glUniform3f(light_loc, 1.0f, 1.0f, 1.0f);
     }
 
     // Set light position
     TEST_OPENGL_ERROR();
-
-    return true;
 }
 
 bool init_GLFW(GLFWwindow** window)
