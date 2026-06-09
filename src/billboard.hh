@@ -3,7 +3,6 @@
 #include <type_traits>
 #include <vector>
 #include <GL/glew.h>
-#include "fire.hh"
 #include "particle.hh"
 
 template <typename T>
@@ -13,7 +12,7 @@ template <ParticleDerived T>
 class Billboard
 {
 public:
-    Billboard(std::vector<GLfloat> vertex_buffer_data, size_t max_particles);
+    Billboard(size_t max_particles);
     bool init_particles();
     void update_particles();
     bool display();
@@ -21,7 +20,6 @@ public:
 private:
     std::vector<T> particles;
 
-    std::vector<GLfloat> g_vertex_buffer_data;
     std::vector<GLfloat> g_particule_position_size_data;
     std::vector<GLubyte> g_particule_color_data;
 

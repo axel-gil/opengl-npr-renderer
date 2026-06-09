@@ -3,12 +3,15 @@
 #include "program.hh"
 #include "vector3.hh"
 #include "gl_error.hh"
+#include "fire.hh"
+
+static const std::vector<GLfloat> g_vertex_buffer_data = {
+    -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, 0.5f, 0.0f, 0.5f, 0.5f, 0.0f,
+};
 
 template <ParticleDerived T>
-Billboard<T>::Billboard(std::vector<GLfloat> vertex_buffer_data,
-                        size_t max_particles)
+Billboard<T>::Billboard(size_t max_particles)
     : particles(max_particles)
-    , g_vertex_buffer_data(vertex_buffer_data)
     , g_particule_position_size_data(max_particles * 4, 0)
     , g_particule_color_data(max_particles * 4, 0)
     , particle_per_frame_(2)
