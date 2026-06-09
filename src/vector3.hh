@@ -1,31 +1,37 @@
 #pragma once
 
+#include <vector>
 namespace mygl
 {
     class Vector3
     {
     public:
         Vector3() = default;
-        Vector3(double x, double y, double z);
+        Vector3(float x, float y, float z);
         Vector3(const Vector3& Vector3);
+        Vector3& operator=(Vector3&& Vector3) = default;
 
-        double get_x() const;
-        double get_y() const;
-        double get_z() const;
+        float get_x() const;
+        float get_y() const;
+        float get_z() const;
 
         void normalize();
         Vector3 cross(const Vector3& vec) const;
-        double dot(const Vector3& vec) const;
+        float dot(const Vector3& vec) const;
+        std::vector<float> get_data() const;
 
         Vector3 operator+(const Vector3& vec) const;
         Vector3 operator-(const Vector3& vec) const;
-        Vector3 operator*(const double l) const;
-        Vector3 operator/(const double l) const;
+        Vector3 operator*(const float l) const;
+        Vector3 operator/(const float l) const;
+
+        Vector3& operator+=(const Vector3& r);
+        Vector3& operator-=(const Vector3& r);
 
     protected:
-        double x_;
-        double y_;
-        double z_;
+        float x_;
+        float y_;
+        float z_;
     };
 
 } // namespace mygl

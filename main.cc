@@ -18,6 +18,7 @@
 #include "init_gl.hh"
 #include "utils.hh"
 #include "object.hh"
+#include "billboard.hh"
 
 void display(const mygl::program* p, GLFWwindow* window,
              std::vector<Object> objects)
@@ -52,19 +53,21 @@ void display(const mygl::program* p, GLFWwindow* window,
 
 int main(int argc, char* argv[])
 {
-    if (argc != 2)
-    {
-        std::cerr << "Wrong usage: ./main <file.obj>\n";
-        return 2;
-    }
+    (void)argc;
+    (void)argv;
+    // if (argc != 2)
+    // {
+    //     std::cerr << "Wrong usage: ./main <file.obj>\n";
+    //     return 2;
+    // }
 
-    // xyz nxnynz uv rgb
-    std::vector<GLfloat> obj_buffer;
-    if (!load_obj(argv[1], obj_buffer))
-    {
-        std::cerr << "Wrong obj file\n";
-        return 3;
-    }
+    // // xyz nxnynz uv rgb
+    // std::vector<GLfloat> obj_buffer;
+    // if (!load_obj(argv[1], obj_buffer))
+    // {
+    //     std::cerr << "Wrong obj file\n";
+    //     return 3;
+    // }
 
     // Create GL window and context
     GLFWwindow* window;
@@ -87,22 +90,37 @@ int main(int argc, char* argv[])
     if (!init_POV(p))
         return 1;
 
-    GLuint tex = load_texture(
-        "textures/tripo_mat_0fd31f00-a609-4dff-92d1-6f84a6da7224_diffuse.jpeg");
+    // GLuint tex = load_texture(
+    //     "textures/tripo_mat_0fd31f00-a609-4dff-92d1-6f84a6da7224_diffuse.jpeg");
     Camera camera = Camera(window);
 
-    Object house{ obj_buffer, tex, p, &camera };
+    // Object house{ obj_buffer, tex, p, &camera };
 
-    if (!house.init())
-        return 1;
+    // if (!house.init())
+    //     return 1;
+    std::vector<Object> objects = {};
 
-    std::vector<Object> objects = { house };
+    static const std::vector<GLfloat> g_vertex_buffer_data = {
+        -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f,
+        -0.5f, 0.5f,  0.0f, 0.5f, 0.5f,  0.0f,
+    };
+
+    static const size_t max_particles = 10;
+    Billboard billboard{ g_vertex_buffer_data, max_particles };
+    billboard.init_particles();
 
     while (!glfwWindowShouldClose(window))
     {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        TEST_OPENGL_ERROR();
         camera.update_camera(p);
+        billboard.update_particles();
 
-        display(p, window, objects);
+        billboard.display();
+        // display(p, window, objects);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 
     delete p;
