@@ -8,7 +8,8 @@ out vec4 FragColor;
 void main()
 {
     // simple lighting factor (optional)
-    float intensity = max(dot(normalize(light_dir), vec3(0, 0, 1)), 0.2);
+    // float intensity = max(dot(normalize(light_dir), vec3(0, 0, 1)), 0.2);
 
-    FragColor = vec4(vColor.rgb * intensity, vColor.a);
+    // FragColor = vec4(vColor.rgb, vColor.a);
+    FragColor = vColor;
 }
