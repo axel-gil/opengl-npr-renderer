@@ -1,23 +1,16 @@
-#include <cmath>
-
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include <iostream>
-#include <string>
 #include <vector>
 
 #include "fire.hh"
 #include "gl_error.hh"
-#include "matrix4.hh"
-#include "transformation.hh"
 #include "program.hh"
 #include "camera.hh"
 
 #include "tiny_obj_loader.hh"
 
 #include "init_gl.hh"
-#include "utils.hh"
 #include "object.hh"
 #include "billboard.hh"
 
@@ -184,14 +177,9 @@ int main(int argc, char* argv[])
             { make_vao(m.buffer), (GLsizei)(m.buffer.size() / 11), tex });
     }
     std::vector<Object> objects = {};
-
-    static const std::vector<GLfloat> g_vertex_buffer_data = {
-        -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f,
-        -0.5f, 0.5f,  0.0f, 0.5f, 0.5f,  0.0f,
-    };
-
     static const size_t max_particles = 1000000;
-    Billboard<Fire> billboard{ g_vertex_buffer_data, max_particles };
+
+    Billboard<Fire> billboard{ max_particles };
     billboard.init_particles();
 
     Camera camera(window);
