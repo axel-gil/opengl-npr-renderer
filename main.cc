@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
         -0.5f, 0.5f,  0.0f, 0.5f, 0.5f,  0.0f,
     };
 
-    static const size_t max_particles = 10;
+    static const size_t max_particles = 10000;
     Billboard billboard{ g_vertex_buffer_data, max_particles };
     billboard.init_particles();
 
