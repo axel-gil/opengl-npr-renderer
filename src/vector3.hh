@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <vector>
 namespace mygl
 {
@@ -27,11 +28,14 @@ namespace mygl
 
         Vector3& operator+=(const Vector3& r);
         Vector3& operator-=(const Vector3& r);
+        friend std::ostream& operator<<(std::ostream& os, const Vector3& v);
 
     protected:
         float x_;
         float y_;
         float z_;
     };
+
+    std::ostream& operator<<(std::ostream& os, const Vector3& v);
 
 } // namespace mygl
