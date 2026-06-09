@@ -9,7 +9,6 @@ class Billboard
 public:
     Billboard(std::vector<GLfloat> vertex_buffer_data, size_t max_particles);
     bool init_particles();
-    void reset_particles();
     void update_particles();
     bool display();
 

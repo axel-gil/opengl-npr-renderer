@@ -1,5 +1,6 @@
 #include "billboard.hh"
 #include <GLFW/glfw3.h>
+#include "program.hh"
 #include "vector3.hh"
 #include "gl_error.hh"
 
@@ -9,7 +10,7 @@ Billboard::Billboard(std::vector<GLfloat> vertex_buffer_data,
     , g_vertex_buffer_data(vertex_buffer_data)
     , g_particule_position_size_data(max_particles * 4, 0)
     , g_particule_color_data(max_particles * 4, 0)
-    , particle_per_frame_(1)
+    , particle_per_frame_(100)
     , max_particles_(max_particles)
     , last_time(static_cast<float>(glfwGetTime()))
 {
@@ -97,6 +98,8 @@ void Billboard::update_particles()
         current_index_ = (current_index_ + 1) % max_particles_;
     }
 
+    // size_t alive_count = 0;
+
     for (size_t i = 0; i < max_particles_; i++)
     {
         Particle& p = particles[i];
@@ -130,11 +133,17 @@ void Billboard::update_particles()
 
     glBindBuffer(GL_ARRAY_BUFFER, particles_position_buffer);
     TEST_OPENGL_ERROR();
+    glBufferData(GL_ARRAY_BUFFER, max_particles_ * 4 * sizeof(GLfloat), nullptr,
+                 GL_STREAM_DRAW); // Buffer orphaning
+    TEST_OPENGL_ERROR();
     glBufferSubData(GL_ARRAY_BUFFER, 0, max_particles_ * 4 * sizeof(GLfloat),
                     g_particule_position_size_data.data());
     TEST_OPENGL_ERROR();
 
     glBindBuffer(GL_ARRAY_BUFFER, particles_color_buffer);
+    TEST_OPENGL_ERROR();
+    glBufferData(GL_ARRAY_BUFFER, max_particles_ * 4 * sizeof(GLubyte), nullptr,
+                 GL_STREAM_DRAW); // Buffer orphaning
     TEST_OPENGL_ERROR();
     glBufferSubData(GL_ARRAY_BUFFER, 0, max_particles_ * 4 * sizeof(GLubyte),
                     g_particule_color_data.data());
@@ -146,8 +155,26 @@ bool Billboard::display()
     glBindVertexArray(vao_id);
     TEST_OPENGL_ERROR();
 
+    // enable a channel for transparency
+    glEnable(GL_BLEND);
+    TEST_OPENGL_ERROR();
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    TEST_OPENGL_ERROR();
+
+    // disable depth mask so that transparencies can compound
+    // Ex:
+    // - A: depth 5 and a = 0.2
+    // - B: depth 6 and a = 0.2
+    //
+    // it will draws both A and B and not stop at B
+    glDepthMask(GL_FALSE);
+    TEST_OPENGL_ERROR();
+
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, max_particles_);
     TEST_OPENGL_ERROR();
+
+    // re-enable depth mask
+    glDepthMask(GL_TRUE);
 
     return true;
 }
