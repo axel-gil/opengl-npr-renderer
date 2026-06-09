@@ -1,0 +1,18 @@
+#version 410 core
+
+in vec4 vColor;
+in vec2 particle_uv;
+
+uniform vec3 light_dir;
+
+out vec4 FragColor;
+
+void main()
+{
+    float dist = length(particle_uv);
+    
+    if (dist > 0.5)
+        discard;
+
+    FragColor = vColor;
+}
