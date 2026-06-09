@@ -8,7 +8,7 @@
 
 bool init_glew();
 void init_GL();
-bool init_shaders(mygl::program** p, std::string shader_name = "");
+bool init_shaders(Program** p, std::string shader_name = "");
 void init_object(const std::vector<GLfloat>& obj_buffer, GLuint* vao_id);
-void init_POV(const mygl::program* p);
+void init_POV(const Program* p);
 bool init_GLFW(GLFWwindow** window);

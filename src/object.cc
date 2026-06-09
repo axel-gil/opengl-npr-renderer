@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-Object::Object(std::vector<GLfloat> buffer, GLuint texture_id, mygl::program* p,
+Object::Object(std::vector<GLfloat> buffer, GLuint texture_id, Program* p,
                Camera* c)
     : buffer(buffer)
     , texture_id(texture_id)
@@ -85,7 +85,8 @@ static mygl::Matrix4 update(float time)
 
 void Object::bounce(float time) const
 {
-    GLint model_loc = glGetUniformLocation(program->program_id, "model_view");
+    GLint model_loc =
+        glGetUniformLocation(program->get_program_id(), "model_view");
     TEST_OPENGL_ERROR();
 
     mygl::Matrix4 flame_model_matrix = camera->get_view();
@@ -109,7 +110,8 @@ void Object::display() const
     // Set the textures
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture_id);
-    glUniform1i(glGetUniformLocation(program->program_id, "tex_diffuse"), 0);
+    glUniform1i(glGetUniformLocation(program->get_program_id(), "tex_diffuse"),
+                0);
 
     // Set primitives
     glDrawArrays(GL_TRIANGLES, 0, buffer.size() / 11);

@@ -12,7 +12,7 @@ public:
     Camera(GLFWwindow* window, GLfloat cam_eye[3], GLfloat cam_center[3],
            GLfloat cam_yaw, GLfloat cam_pitch, const GLfloat cam_rot_speed,
            const GLfloat cam_speed, const GLfloat mouse_sensitivity);
-    void update_camera(const mygl::program* p);
+    void update_camera(const Program* p);
     mygl::Matrix4 get_view();
 
 private:

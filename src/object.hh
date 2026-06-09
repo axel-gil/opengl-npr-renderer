@@ -7,7 +7,7 @@
 class Object
 {
 public:
-    Object(std::vector<GLfloat> buffer, GLuint texture_id, mygl::program* p,
+    Object(std::vector<GLfloat> buffer, GLuint texture_id, Program* p,
            Camera* c);
 
     bool init();
@@ -18,6 +18,6 @@ private:
     std::vector<GLfloat> buffer;
     GLuint vao_id;
     GLuint texture_id;
-    mygl::program* program;
+    Program* program;
     Camera* camera;
 };

@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include "matrix4.hh"
 #include "transformation.hh"
 
@@ -37,7 +36,7 @@ Camera::Camera(GLFWwindow* window, GLfloat cam_eye[3], GLfloat cam_center[3],
     std::copy(cam_center, cam_center + 3, cam_center_);
 }
 
-void Camera::update_camera(const mygl::program* p)
+void Camera::update_camera(const Program* p)
 {
     // get the current mouse position
     double mouse_x;
@@ -129,10 +128,8 @@ void Camera::update_camera(const mygl::program* p)
     view = mygl::lookat(cam_eye_[0], cam_eye_[1], cam_eye_[2], cam_center_[0],
                         cam_center_[1], cam_center_[2], 0.0f, 1.0f, 0.0f);
 
-    GLint view_loc = glGetUniformLocation(p->program_id, "model_view");
-
-    if (view_loc != -1)
-        glUniformMatrix4fv(view_loc, 1, GL_FALSE, view.get_data().data());
+    GLint view_loc = glGetUniformLocation(p->get_program_id(), "model_view");
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, view.get_data().data());
 }
 
 mygl::Matrix4 Camera::get_view()
