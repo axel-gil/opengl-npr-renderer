@@ -85,15 +85,16 @@ void display(const mygl::program* p, GLFWwindow* window, Camera& camera,
 
     float time = (float)glfwGetTime();
 
-    GLint time_loc = glGetUniformLocation(p->program_id, "time");
+    // GLint time_loc = glGetUniformLocation(p->program_id, "time");
     TEST_OPENGL_ERROR();
 
+    /*
     if (time_loc == -1)
     {
         std::cerr << "Uniform 'time' not found" << std::endl;
-    }
+    }*/
 
-    glUniform1f(time_loc, time);
+    // glUniform1f(time_loc, time);
     TEST_OPENGL_ERROR();
 
     mygl::Matrix4 flame_model_matrix = camera.get_view();

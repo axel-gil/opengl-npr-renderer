@@ -3,6 +3,8 @@
 #include "matrix4.hh"
 #include "transformation.hh"
 
+#include <cmath>
+
 Object::Object(std::vector<GLfloat> buffer, GLuint texture_id, mygl::program* p,
                Camera* c)
     : buffer(buffer)
