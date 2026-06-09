@@ -102,4 +102,10 @@ namespace mygl
         return *this;
     }
 
+    std::ostream& operator<<(std::ostream& os, const Vector3& v)
+    {
+        os << "x: " << v.x_ << ", y: " << v.y_ << ", z: " << v.z_;
+        return os;
+    }
+
 } // namespace mygl
