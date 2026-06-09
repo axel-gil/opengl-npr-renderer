@@ -1,10 +1,11 @@
 #include "vector3.hh"
 
 #include <cmath>
+#include <vector>
 
 namespace mygl
 {
-    Vector3::Vector3(double x, double y, double z)
+    Vector3::Vector3(float x, float y, float z)
         : x_(x)
         , y_(y)
         , z_(z)
@@ -16,22 +17,22 @@ namespace mygl
         , z_(point3.get_z())
     {}
 
-    double Vector3::get_x() const
+    float Vector3::get_x() const
     {
         return x_;
     }
-    double Vector3::get_y() const
+    float Vector3::get_y() const
     {
         return y_;
     }
-    double Vector3::get_z() const
+    float Vector3::get_z() const
     {
         return z_;
     }
 
     void Vector3::normalize()
     {
-        double euclidian_lenght = sqrt(x_ * x_ + y_ * y_ + z_ * z_);
+        float euclidian_lenght = sqrt(x_ * x_ + y_ * y_ + z_ * z_);
         if (euclidian_lenght != 0)
         {
             x_ /= euclidian_lenght;
@@ -51,9 +52,14 @@ namespace mygl
                         x_ * p.get_y() - y_ * p.get_x() };
     }
 
-    double Vector3::dot(const Vector3& p) const
+    float Vector3::dot(const Vector3& p) const
     {
         return x_ * p.get_x() + y_ * p.get_y() + z_ * p.get_z();
+    }
+
+    std::vector<float> Vector3::get_data() const
+    {
+        return std::vector<float>{ x_, y_, z_ };
     }
 
     Vector3 Vector3::operator+(const Vector3& p) const
@@ -68,14 +74,47 @@ namespace mygl
                         get_z() - p.get_z() };
     }
 
-    Vector3 Vector3::operator*(const double l) const
+    Vector3 Vector3::operator*(const float l) const
     {
         return Vector3{ get_x() * l, get_y() * l, get_z() * l };
     }
 
-    Vector3 Vector3::operator/(const double l) const
+    Vector3 Vector3::operator/(const float l) const
     {
         return Vector3{ get_x() / l, get_y() / l, get_z() / l };
+    }
+
+    Vector3& Vector3::operator+=(const Vector3& r)
+    {
+        x_ += r.x_;
+        y_ += r.y_;
+        z_ += r.z_;
+
+        return *this;
+    }
+
+    Vector3& Vector3::operator-=(const Vector3& r)
+    {
+        x_ -= r.x_;
+        y_ -= r.y_;
+        z_ -= r.z_;
+
+        return *this;
+    }
+
+    Vector3& Vector3::operator*=(const Vector3& r)
+    {
+        x_ *= r.x_;
+        y_ *= r.y_;
+        z_ *= r.z_;
+
+        return *this;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const Vector3& v)
+    {
+        os << "x: " << v.x_ << ", y: " << v.y_ << ", z: " << v.z_;
+        return os;
     }
 
 } // namespace mygl

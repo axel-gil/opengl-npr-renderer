@@ -19,11 +19,15 @@ SRC = main.cc \
 	  src/init_gl.cc \
 	  src/vector3.cc \
 	  src/object.cc \
+	  src/billboard.cc \
+	  src/color.cc \
+	  src/particle.cc \
+	  src/fire.cc \
 		src/utils.cc
 
 OBJ = $(SRC:.cc=.o)
 
-CXXFLAGS += -Wall -Wextra -O3 -g -std=c++20
+CXXFLAGS += -Wall -Wextra -g -std=c++20
 CXXFLAGS += -m64 -march=native
 
 ifeq ($(platform),Darwin)

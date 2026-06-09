@@ -11,7 +11,7 @@ Camera::Camera(GLFWwindow* window)
     , cam_center_{ 1.0f, 1.5f, 0.0f }
     , cam_yaw_(1.5708f)
     , cam_pitch_(0.0f)
-    , cam_speed_(25.0f)
+    , cam_speed_(0.2f)
     , cam_rot_speed_(0.04f)
     , last_mouse_x_(0.0f)
     , last_mouse_y_(0.0f)
@@ -129,7 +129,9 @@ void Camera::update_camera(const mygl::program* p)
                         cam_center_[1], cam_center_[2], 0.0f, 1.0f, 0.0f);
 
     GLint view_loc = glGetUniformLocation(p->program_id, "model_view");
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, view.get_data().data());
+
+    if (view_loc != -1)
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, view.get_data().data());
 }
 
 mygl::Matrix4 Camera::get_view()
