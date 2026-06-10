@@ -5,25 +5,26 @@ void Fire::spawn()
 {
     // r = rand [0, 1]
     // angle = [0, 2pi]
-    float radius = 4.0f;
+    float radius = 150.0f;
 
-    float r = radius * (fast_rand() % 2000) / 20000.0f;
+    float r = radius * (fast_rand() % 2000) / 2000.0f;
     float angle = 2.0f * M_PI * (fast_rand() % 2000) / 2000;
 
     float x = std::cos(angle) * r;
     float z = std::sin(angle) * r;
 
     pos_ = { x, 0, z };
+    pos_ += { 21.2, -29, -27 };
 
     vel_ = {
-        0.2f * (fast_rand() % 2000 - 1000.0f) / 10000.0f,
-        1.0f + (fast_rand() % 2000 - 1000.0f) / 10000.0f,
-        0.2f * (fast_rand() % 2000 - 1000.0f) / 10000.0f,
+        2.f * (fast_rand() % 2000 - 1000.0f) / 10000.0f,
+        5.0f + (fast_rand() % 2000 - 1000.0f) / 10000.0f,
+        2.f * (fast_rand() % 2000 - 1000.0f) / 10000.0f,
     };
 
     life_ = 1.0f + (fast_rand() % 2000) / 2000.0f;
     max_life_ = life_;
-    size_ = 3.0f * (fast_rand() % 2000) / 20000.0f;
+    size_ = 12.0f * (fast_rand() % 2000) / 20000.0f;
     color_ = { 255, 80, 0, 180 };
     alive_ = true;
 }

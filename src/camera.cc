@@ -1,5 +1,6 @@
 #include "camera.hh"
 
+#include <GLFW/glfw3.h>
 #include <algorithm>
 #include <cmath>
 #include "matrix4.hh"
@@ -17,6 +18,7 @@ Camera::Camera(GLFWwindow* window)
     , last_mouse_y_(0.0f)
     , mouse_init_(true)
     , mouse_sensitivity_(0.0025f)
+    , nuke_state_(false)
 {}
 
 Camera::Camera(GLFWwindow* window, GLfloat cam_eye[3], GLfloat cam_center[3],
@@ -31,6 +33,7 @@ Camera::Camera(GLFWwindow* window, GLfloat cam_eye[3], GLfloat cam_center[3],
     , last_mouse_y_(0.0f)
     , mouse_init_(true)
     , mouse_sensitivity_(mouse_sensitivity)
+    , nuke_state_(false)
 {
     std::copy(cam_eye, cam_eye + 3, cam_eye_);
     std::copy(cam_center, cam_center + 3, cam_center_);
@@ -120,6 +123,10 @@ void Camera::update_camera(const Program* p)
     {
         glfwSetWindowShouldClose(window_, GLFW_TRUE);
     }
+    if (glfwGetKey(window_, GLFW_KEY_N) == GLFW_PRESS)
+    {
+        set_nuke_state(!get_nuke_state());
+    }
 
     cam_center_[0] = cam_eye_[0] + forward_x;
     cam_center_[1] = cam_eye_[1] + forward_y;
@@ -127,7 +134,13 @@ void Camera::update_camera(const Program* p)
 
     view = mygl::lookat(cam_eye_[0], cam_eye_[1], cam_eye_[2], cam_center_[0],
                         cam_center_[1], cam_center_[2], 0.0f, 1.0f, 0.0f);
+    upload_view(p);
+}
 
+void Camera::upload_view(const Program* p) const
+{
+    // glUniform* targets the CURRENTLY BOUND program, so bind p first.
+    p->use();
     GLint view_loc = glGetUniformLocation(p->get_program_id(), "model_view");
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, view.get_data().data());
 }
@@ -135,4 +148,14 @@ void Camera::update_camera(const Program* p)
 mygl::Matrix4 Camera::get_view()
 {
     return view;
+}
+
+bool Camera::get_nuke_state() const
+{
+    return nuke_state_;
+}
+
+void Camera::set_nuke_state(bool nuke_state)
+{
+    nuke_state_ = nuke_state;
 }

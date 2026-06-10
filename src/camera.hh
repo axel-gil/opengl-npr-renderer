@@ -13,7 +13,12 @@ public:
            GLfloat cam_yaw, GLfloat cam_pitch, const GLfloat cam_rot_speed,
            const GLfloat cam_speed, const GLfloat mouse_sensitivity);
     void update_camera(const Program* p);
+    // Bind program p, then upload the current view matrix to its model_view
+    // uniform. Must bind first: glUniform* writes to the active program.
+    void upload_view(const Program* p) const;
     mygl::Matrix4 get_view();
+    bool get_nuke_state() const;
+    void set_nuke_state(bool nuke_state);
 
 private:
     GLFWwindow* window_;
@@ -28,4 +33,5 @@ private:
     bool mouse_init_;
     const float mouse_sensitivity_;
     mygl::Matrix4 view;
+    bool nuke_state_;
 };

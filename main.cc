@@ -63,11 +63,9 @@ static GLuint white_tex()
     return t;
 }
 
-void display(const Program* p, const Program* outline, GLFWwindow* window,
-             Camera& camera, const std::vector<GpuMesh>& gpu)
+void display(const Program* p, const Program* outline, Camera& camera,
+             const std::vector<GpuMesh>& gpu)
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     mygl::Matrix4 view = camera.get_view();
 
     outline->use();
@@ -114,12 +112,7 @@ int main(int argc, char* argv[])
         return 4;
     init_GL();
 
-    std::shared_ptr<Program> fire = std::make_shared<Program>();
-    if (!fire->init_shaders("fire"))
-    {
-        return 1;
-    }
-    fire->init_POV();
+    std::shared_ptr<Program> fire = nullptr;
 
     std::shared_ptr<Program> color = std::make_shared<Program>();
     if (!color->init_shaders("color"))
@@ -145,7 +138,7 @@ int main(int argc, char* argv[])
     GLuint white = white_tex();
     std::map<std::string, GLuint> tex_cache;
     std::vector<GpuMesh> gpu;
-    for (auto& m : meshes)
+    for (const auto& m : meshes)
     {
         GLuint tex = white;
         if (!m.texture_path.empty())
@@ -156,7 +149,7 @@ int main(int argc, char* argv[])
             else
             {
                 GLuint t = load_texture(m.texture_path.c_str());
-                tex = t ? t : white;
+                tex = t ?: white;
                 tex_cache[m.texture_path] = tex;
             }
         }
@@ -175,15 +168,34 @@ int main(int argc, char* argv[])
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         TEST_OPENGL_ERROR();
-        camera.update_camera(fire.get());
+        // Advance the camera once per frame (this also uploads to color),
+        // then push the same view to the other programs. Calling
+        // update_camera multiple times would process input multiple times
+        // and move the camera too fast.
         camera.update_camera(color.get());
-        camera.update_camera(outline.get());
+        camera.upload_view(outline.get());
+        if (camera.get_nuke_state())
+        {
+            if (fire == nullptr)
+            {
+                fire = std::make_shared<Program>();
+                if (!fire->init_shaders("fire"))
+                {
+                    return 1;
+                }
+                fire->init_POV();
+            }
+            camera.upload_view(fire.get());
+        }
 
-        fire->use();
-        billboard.update_particles();
-        billboard.display();
+        display(color.get(), outline.get(), camera, gpu);
 
-        display(color.get(), outline.get(), window, camera, gpu);
+        if (camera.get_nuke_state())
+        {
+            fire->use();
+            billboard.update_particles();
+            billboard.display();
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
