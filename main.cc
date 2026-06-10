@@ -64,6 +64,30 @@ static GLuint white_tex()
     return t;
 }
 
+void display_moon(const Program* moon, Camera& camera, GLuint moon_vao)
+{
+    moon->use();
+    camera.upload_view(moon);
+
+    const float D = 5000.0f;
+    float lx = 0.5f, ly = 0.35f, lz = 0.6f;
+    float len = std::sqrt(lx * lx + ly * ly + lz * lz);
+    glUniform3f(glGetUniformLocation(moon->get_program_id(), "moon_center"),
+                lx / len * D, ly / len * D, lz / len * D);
+    glUniform1f(glGetUniformLocation(moon->get_program_id(), "moon_size"),
+                400.0f);
+    glUniform3f(glGetUniformLocation(moon->get_program_id(), "moon_color"),
+                1.0f, 1.f, 1.f);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    glBindVertexArray(moon_vao);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+}
+
 void display(const Program* p, const Program* outline, Camera& camera,
              const std::vector<GpuMesh>& gpu)
 {
@@ -134,6 +158,7 @@ int main(int argc, char* argv[])
         return 1;
     moon->init_POV();
 
+    // Moon init
     static const GLfloat quad[] = {
         -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f,
         -0.5f, 0.5f,  0.0f, 0.5f, 0.5f,  0.0f,
@@ -189,10 +214,7 @@ int main(int argc, char* argv[])
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         TEST_OPENGL_ERROR();
-        // Advance the camera once per frame (this also uploads to color),
-        // then push the same view to the other programs. Calling
-        // update_camera multiple times would process input multiple times
-        // and move the camera too fast.
+
         camera.update_camera(color.get());
         camera.upload_view(outline.get());
         if (camera.get_nuke_state())
@@ -218,32 +240,7 @@ int main(int argc, char* argv[])
             billboard.display();
         }
 
-        moon->use();
-        camera.upload_view(
-            moon.get()); // pousse la vue courante, comme pour outline/fire
-
-        // le soleil est dans la direction de light_dir, très loin (<
-        // zfar=10000)
-        const float D = 5000.0f;
-        // même direction que ton light_dir, normalisée :
-        float lx = 0.5f, ly = 0.35f, lz = 0.6f;
-        float len = std::sqrt(lx * lx + ly * ly + lz * lz);
-        glUniform3f(glGetUniformLocation(moon->get_program_id(), "moon_center"),
-                    lx / len * D, ly / len * D, lz / len * D);
-        glUniform1f(glGetUniformLocation(moon->get_program_id(), "moon_size"),
-                    400.0f);
-        glUniform3f(glGetUniformLocation(moon->get_program_id(), "moon_color"),
-                    1.0f, 1.f, 1.f);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA,
-                    GL_ONE_MINUS_SRC_ALPHA); // GL_ONE, GL_ONE pour un halo plus
-                                             // "additif"
-        glDepthMask(GL_FALSE); // n'écrit pas la profondeur
-        glBindVertexArray(moon_vao);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glDepthMask(GL_TRUE);
-        glDisable(GL_BLEND);
+        display_moon(moon.get(), camera, moon_vao);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

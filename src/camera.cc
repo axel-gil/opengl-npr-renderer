@@ -3,13 +3,14 @@
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include "matrix4.hh"
 #include "transformation.hh"
 
 Camera::Camera(GLFWwindow* window)
     : window_(window)
-    , cam_eye_{ -12.0f, -22.f, -51.0f }
-    , cam_center_{ 1.0f, 1.5f, 0.0f }
+    , cam_eye_{ -24.4943, -22, 128.771 }
+    , cam_center_{ -27.1006, -23, 131.498 }
     , cam_yaw_(1.5708f)
     , cam_pitch_(0.0f)
     , cam_speed_(1.0f)

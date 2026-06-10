@@ -23,6 +23,7 @@ void main()
     else if (ndl > 0.20) t = 0.40;
     else                 t = 0.15;
 
+
     vec3 ambient = vec3(0.20, 0.25, 0.40);
     vec3 lit     = vec3(1.00, 0.98, 0.90);
     vec3 light = mix(ambient, lit, t);
