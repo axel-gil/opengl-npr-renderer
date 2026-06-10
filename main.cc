@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "fire.hh"
 #include "gl_error.hh"
@@ -128,6 +129,25 @@ int main(int argc, char* argv[])
     }
     outline->init_POV();
 
+    std::shared_ptr<Program> sun = std::make_shared<Program>();
+    if (!sun->init_shaders("sun"))
+        return 1;
+    sun->init_POV();
+
+    static const GLfloat quad[] = {
+        -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f,
+        -0.5f, 0.5f,  0.0f, 0.5f, 0.5f,  0.0f,
+    };
+    GLuint sun_vao, sun_vbo;
+    glGenVertexArrays(1, &sun_vao);
+    glBindVertexArray(sun_vao);
+    glGenBuffers(1, &sun_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, sun_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+
     std::vector<Mesh> meshes;
     if (!load_obj(argv[1], meshes))
     {
@@ -158,12 +178,13 @@ int main(int argc, char* argv[])
     }
 
     std::vector<Object> objects = {};
-    static const size_t max_particles = 1000000;
+    static const size_t max_particles = 10000000;
 
     Billboard<Fire> billboard{ max_particles };
     billboard.init_particles();
 
     Camera camera(window);
+    glClearColor(0.10f, 0.13f, 0.20f, 1.0f);
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -196,6 +217,33 @@ int main(int argc, char* argv[])
             billboard.update_particles();
             billboard.display();
         }
+
+        sun->use();
+        camera.upload_view(
+            sun.get()); // pousse la vue courante, comme pour outline/fire
+
+        // le soleil est dans la direction de light_dir, très loin (<
+        // zfar=10000)
+        const float D = 5000.0f;
+        // même direction que ton light_dir, normalisée :
+        float lx = 0.5f, ly = 0.35f, lz = 0.6f;
+        float len = std::sqrt(lx * lx + ly * ly + lz * lz);
+        glUniform3f(glGetUniformLocation(sun->get_program_id(), "sun_center"),
+                    lx / len * D, ly / len * D, lz / len * D);
+        glUniform1f(glGetUniformLocation(sun->get_program_id(), "sun_size"),
+                    400.0f);
+        glUniform3f(glGetUniformLocation(sun->get_program_id(), "sun_color"),
+                    1.0f, 1.f, 1.f);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA,
+                    GL_ONE_MINUS_SRC_ALPHA); // GL_ONE, GL_ONE pour un halo plus
+                                             // "additif"
+        glDepthMask(GL_FALSE); // n'écrit pas la profondeur
+        glBindVertexArray(sun_vao);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
