@@ -1,0 +1,16 @@
+#version 410 core
+
+in vec2 v_uv;
+uniform vec3 sun_color;
+out vec4 FragColor;
+
+void main()
+{
+    float d = length(v_uv) * 2.0;             // 0 au centre, 1 au bord du quad
+    float core = smoothstep(0.55, 0.40, d);   // le disque
+    float glow = smoothstep(1.0, 0.0, d) * 0.5; // le halo
+    float a = clamp(core + glow, 0.0, 1.0);
+    if (a <= 0.001)
+        discard;
+    FragColor = vec4(sun_color, a);
+}
