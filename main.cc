@@ -1,6 +1,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <iostream>
+#include <memory>
+#include <string>
 #include <vector>
 
 #include "fire.hh"
@@ -60,58 +63,38 @@ static GLuint white_tex()
     return t;
 }
 
-void display(const mygl::program* p, GLFWwindow* window, Camera& camera,
-             std::vector<GpuMesh> gpu)
+void display(const Program* p, const Program* outline, Camera& camera,
+             const std::vector<GpuMesh>& gpu)
 {
-    // Clear the color and the depth
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    TEST_OPENGL_ERROR();
+    mygl::Matrix4 view = camera.get_view();
 
-    float time = (float)glfwGetTime();
-
-    // GLint time_loc = glGetUniformLocation(p->program_id, "time");
-    TEST_OPENGL_ERROR();
-
-    /*
-    if (time_loc == -1)
-    {
-        std::cerr << "Uniform 'time' not found" << std::endl;
-    }*/
-
-    // glUniform1f(time_loc, time);
-    TEST_OPENGL_ERROR();
-
-    mygl::Matrix4 flame_model_matrix = camera.get_view();
-
-    // Bounce
-    /*
-    flame_model_matrix *= update(time);
-
-    glUniformMatrix4fv(model_loc, 1, GL_FALSE,
-                       flame_model_matrix.get_data().data());
-                       */
-
-    glUniform1i(glGetUniformLocation(p->program_id, "tex_diffuse"), 0);
-
-    // Set primitives
-    GLint tex_loc = glGetUniformLocation(p->program_id, "tex_diffuse");
+    outline->use();
+    glUniformMatrix4fv(
+        glGetUniformLocation(outline->get_program_id(), "model_view"), 1,
+        GL_FALSE, view.get_data().data());
+    glUniform1f(
+        glGetUniformLocation(outline->get_program_id(), "outline_width"),
+        0.05f);
+    glCullFace(GL_FRONT);
     for (const auto& g : gpu)
     {
-        glActiveTexture(GL_TEXTURE0);
+        glBindVertexArray(g.vao);
+        glDrawArrays(GL_TRIANGLES, 0, g.count);
+    }
+
+    p->use();
+    glCullFace(GL_BACK);
+    GLint tex_loc = glGetUniformLocation(p->get_program_id(), "tex_diffuse");
+    glActiveTexture(GL_TEXTURE0);
+    for (const auto& g : gpu)
+    {
         glBindTexture(GL_TEXTURE_2D, g.tex);
         glUniform1i(tex_loc, 0);
         glBindVertexArray(g.vao);
         glDrawArrays(GL_TRIANGLES, 0, g.count);
     }
-    TEST_OPENGL_ERROR();
 
-    // Unbind the VAO
     glBindVertexArray(0);
-    TEST_OPENGL_ERROR();
-
-    // Swaps the buffers
-    glfwSwapBuffers(window);
-    glfwPollEvents();
 }
 
 int main(int argc, char* argv[])
@@ -129,11 +112,21 @@ int main(int argc, char* argv[])
         return 4;
     init_GL();
 
-    mygl::program* p = nullptr;
-    if (!init_shaders(&p))
+    std::shared_ptr<Program> fire = nullptr;
+
+    std::shared_ptr<Program> color = std::make_shared<Program>();
+    if (!color->init_shaders("color"))
+    {
         return 1;
-    if (!init_POV(p))
+    }
+    color->init_POV();
+
+    std::shared_ptr<Program> outline = std::make_shared<Program>();
+    if (!outline->init_shaders("outline"))
+    {
         return 1;
+    }
+    outline->init_POV();
 
     std::vector<Mesh> meshes;
     if (!load_obj(argv[1], meshes))
@@ -145,7 +138,7 @@ int main(int argc, char* argv[])
     GLuint white = white_tex();
     std::map<std::string, GLuint> tex_cache;
     std::vector<GpuMesh> gpu;
-    for (auto& m : meshes)
+    for (const auto& m : meshes)
     {
         GLuint tex = white;
         if (!m.texture_path.empty())
@@ -156,13 +149,14 @@ int main(int argc, char* argv[])
             else
             {
                 GLuint t = load_texture(m.texture_path.c_str());
-                tex = t ? t : white;
+                tex = t ?: white;
                 tex_cache[m.texture_path] = tex;
             }
         }
         gpu.push_back(
             { make_vao(m.buffer), (GLsizei)(m.buffer.size() / 11), tex });
     }
+
     std::vector<Object> objects = {};
     static const size_t max_particles = 1000000;
 
@@ -174,18 +168,39 @@ int main(int argc, char* argv[])
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         TEST_OPENGL_ERROR();
-        camera.update_camera(p);
-        // display(p, window, camera, gpu);
-        billboard.update_particles();
+        // Advance the camera once per frame (this also uploads to color),
+        // then push the same view to the other programs. Calling
+        // update_camera multiple times would process input multiple times
+        // and move the camera too fast.
+        camera.update_camera(color.get());
+        camera.upload_view(outline.get());
+        if (camera.get_nuke_state())
+        {
+            if (fire == nullptr)
+            {
+                fire = std::make_shared<Program>();
+                if (!fire->init_shaders("fire"))
+                {
+                    return 1;
+                }
+                fire->init_POV();
+            }
+            camera.upload_view(fire.get());
+        }
 
-        billboard.display();
-        // display(p, window, objects);
+        display(color.get(), outline.get(), camera, gpu);
+
+        if (camera.get_nuke_state())
+        {
+            fire->use();
+            billboard.update_particles();
+            billboard.display();
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    delete p;
     glfwTerminate();
     return 0;
 }

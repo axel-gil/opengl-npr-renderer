@@ -1,0 +1,24 @@
+#version 410 core
+
+in vec2 uv;
+in vec3 normal;
+in vec3 vcolor;
+
+uniform sampler2D tex_diffuse;
+
+out vec4 FragColor;
+
+void main()
+{
+    vec4 tex = texture(tex_diffuse, uv);
+
+    // Simple fixed-direction diffuse with a high ambient floor so nothing
+    // ever goes fully black. light_dir is hard-coded here on purpose:
+    // Program::init_POV() never actually uploads the light_dir uniform
+    // (see note below), so relying on it would leave the scene unlit.
+    vec3 L = normalize(vec3(0.4, 1.0, 0.3));
+    float diff = max(dot(normalize(normal), L), 0.0);
+    float light = 0.6 + 0.4 * diff;
+
+    FragColor = vec4(tex.rgb * light, 1.0);
+}

@@ -1,0 +1,22 @@
+#version 410 core
+
+layout(location = 0) in vec3 in_position;   // xyz
+layout(location = 1) in vec3 in_normal;     // nx ny nz
+layout(location = 2) in vec2 in_uv;         // u v
+layout(location = 3) in vec3 in_color;      // r g b (vertex color, optional)
+
+uniform mat4 model_view;
+uniform mat4 projection;
+
+out vec2 uv;
+out vec3 normal;
+out vec3 vcolor;
+
+void main()
+{
+    gl_Position = projection * model_view * vec4(in_position, 1.0);
+
+    uv = in_uv;
+    normal = normalize(in_normal);
+    vcolor = in_color;
+}

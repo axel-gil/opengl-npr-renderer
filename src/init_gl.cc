@@ -1,11 +1,8 @@
 #include "init_gl.hh"
 
 #include "gl_error.hh"
-#include "matrix4.hh"
-#include "transformation.hh"
 
 #include <iostream>
-#include <cmath>
 
 // Init OpenGLfunctions
 bool init_glew()
@@ -44,30 +41,8 @@ void init_GL()
     TEST_OPENGL_ERROR();
 }
 
-// Init the shaders
-bool init_shaders(mygl::program** p)
-{
-    mygl::program* program =
-        mygl::program::makeprogram("vertex.shd", "fragment.shd");
-    *p = program;
-
-    // Use the program in the rendering state
-    if (program->is_ready())
-    {
-        program->use();
-        TEST_OPENGL_ERROR();
-    }
-    else
-    {
-        std::cerr << program->get_log();
-        return false;
-    }
-
-    return true;
-}
-
 // Init the global
-bool init_object(const std::vector<GLfloat>& obj_buffer, GLuint* vao_id)
+void init_object(const std::vector<GLfloat>& obj_buffer, GLuint* vao_id)
 {
     // Generate 1 vertex array
     // The name is stored in vao_id (global variable)
@@ -122,60 +97,6 @@ bool init_object(const std::vector<GLfloat>& obj_buffer, GLuint* vao_id)
     glEnableVertexAttribArray(3);
 
     glBindVertexArray(0);
-    return true;
-}
-
-bool init_POV(const mygl::program* p)
-{
-    mygl::Matrix4 view =
-        mygl::lookat(0.0f, 1.5f, -4.0f, 1.0f, 1.5f, 0.0f, 0.0f, 1.0f, 0.0f);
-
-    // FOV of 90
-    float fovy = 90.0f * M_PI / 180.0f;
-    float aspect = 1920.0 / 1080;
-    float znear = 0.1f, zfar = 10000.0f;
-
-    float top = znear * std::tan(fovy * 0.5f);
-    float bottom = -top;
-    float right = top * aspect;
-    float left = -right;
-    mygl::Matrix4 proj = mygl::frustum(left, right, bottom, top, znear, zfar);
-
-    // Get the uniformLocation in the program with a named uniform variable
-    // Return -1 if the variable doesn't exist
-    GLint view_loc = glGetUniformLocation(p->program_id, "model_view");
-    TEST_OPENGL_ERROR();
-
-    GLint proj_loc = glGetUniformLocation(p->program_id, "projection");
-    TEST_OPENGL_ERROR();
-
-    if (view_loc == -1)
-        std::cerr << "Uniform 'model_view' not found" << std::endl;
-    if (proj_loc == -1)
-        std::cerr << "Uniform 'projection' not found" << std::endl;
-
-    // Upload the two 4x4 matrices on the GPU
-    // count : 1
-    // transpose : GL_FALSE
-    // value: the matrix
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, view.get_data().data());
-    TEST_OPENGL_ERROR();
-    glUniformMatrix4fv(proj_loc, 1, GL_FALSE, proj.get_data().data());
-    TEST_OPENGL_ERROR();
-
-    // Get the light direction
-    GLint light_loc = glGetUniformLocation(p->program_id, "light_dir");
-    TEST_OPENGL_ERROR();
-    if (light_loc == -1)
-    {
-        std::cerr << "Uniform 'light_dir' not found" << std::endl;
-    }
-
-    // Set light position
-    glUniform3f(light_loc, 1.0f, 1.0f, 1.0f);
-    TEST_OPENGL_ERROR();
-
-    return true;
 }
 
 bool init_GLFW(GLFWwindow** window)

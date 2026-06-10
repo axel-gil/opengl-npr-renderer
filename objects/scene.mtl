@@ -1,17 +1,12 @@
 # File produced by Open Asset Import Library (http://www.assimp.sf.net)
 # (assimp v6.0.0)
 
-newmtl tripo_mat_0fd31f00-a609-4dff-92d1-6f84a6da7224
+newmtl PP_Standard_Material
 Kd 1 1 1
-Ks 1 1 1
 Ke 0 0 0
 d 1
-Ns 1000
-illum 2
-map_Kd textures/tripo_mat_0fd31f00-a609-4dff-92d1-6f84a6da7224_diffuse.jpeg
-map_Ks textures/tripo_mat_0fd31f00-a609-4dff-92d1-6f84a6da7224_specularGlossiness.png
-bump textures/tripo_mat_0fd31f00-a609-4dff-92d1-6f84a6da7224_normal.jpeg
-map_bump textures/tripo_mat_0fd31f00-a609-4dff-92d1-6f84a6da7224_normal.jpeg
+illum 1
+map_Kd textures/PP_Standard_Material_baseColor.png
 
 newmtl $Material_1
 Kd 1 1 1

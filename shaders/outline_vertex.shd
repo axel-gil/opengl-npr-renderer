@@ -1,0 +1,14 @@
+#version 410 core
+
+layout(location = 0) in vec3 in_position;
+layout(location = 1) in vec3 in_normal;
+
+uniform mat4 model_view;
+uniform mat4 projection;
+uniform float outline_width;
+
+void main()
+{
+    vec3 p = in_position + normalize(in_normal) * outline_width;
+    gl_Position = projection * model_view * vec4(p, 1.0);
+}
