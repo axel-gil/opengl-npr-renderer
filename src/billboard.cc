@@ -14,7 +14,7 @@ Billboard<T>::Billboard(size_t max_particles)
     : particles(max_particles)
     , g_particule_position_size_data(max_particles * 4, 0)
     , g_particule_color_data(max_particles * 4, 0)
-    , particle_per_frame_(30000)
+    , particle_per_frame_(15000)
     , max_particles_(max_particles)
     , last_time(static_cast<float>(glfwGetTime()))
 {

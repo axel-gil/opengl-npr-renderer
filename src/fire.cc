@@ -5,7 +5,7 @@ void Fire::spawn()
 {
     // r = rand [0, 1]
     // angle = [0, 2pi]
-    float radius = 150.0f;
+    float radius = 90.0f;
 
     float r = radius * (fast_rand() % 2000) / 2000.0f;
     float angle = 2.0f * M_PI * (fast_rand() % 2000) / 2000;

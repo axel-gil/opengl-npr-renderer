@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
     }
 
     std::vector<Object> objects = {};
-    static const size_t max_particles = 10000000;
+    static const size_t max_particles = 1000000;
 
     Billboard<Fire> billboard{ max_particles };
     billboard.init_particles();
