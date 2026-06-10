@@ -129,20 +129,20 @@ int main(int argc, char* argv[])
     }
     outline->init_POV();
 
-    std::shared_ptr<Program> sun = std::make_shared<Program>();
-    if (!sun->init_shaders("sun"))
+    std::shared_ptr<Program> moon = std::make_shared<Program>();
+    if (!moon->init_shaders("moon"))
         return 1;
-    sun->init_POV();
+    moon->init_POV();
 
     static const GLfloat quad[] = {
         -0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f,
         -0.5f, 0.5f,  0.0f, 0.5f, 0.5f,  0.0f,
     };
-    GLuint sun_vao, sun_vbo;
-    glGenVertexArrays(1, &sun_vao);
-    glBindVertexArray(sun_vao);
-    glGenBuffers(1, &sun_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, sun_vbo);
+    GLuint moon_vao, moon_vbo;
+    glGenVertexArrays(1, &moon_vao);
+    glBindVertexArray(moon_vao);
+    glGenBuffers(1, &moon_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, moon_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(0);
@@ -218,9 +218,9 @@ int main(int argc, char* argv[])
             billboard.display();
         }
 
-        sun->use();
+        moon->use();
         camera.upload_view(
-            sun.get()); // pousse la vue courante, comme pour outline/fire
+            moon.get()); // pousse la vue courante, comme pour outline/fire
 
         // le soleil est dans la direction de light_dir, très loin (<
         // zfar=10000)
@@ -228,11 +228,11 @@ int main(int argc, char* argv[])
         // même direction que ton light_dir, normalisée :
         float lx = 0.5f, ly = 0.35f, lz = 0.6f;
         float len = std::sqrt(lx * lx + ly * ly + lz * lz);
-        glUniform3f(glGetUniformLocation(sun->get_program_id(), "sun_center"),
+        glUniform3f(glGetUniformLocation(moon->get_program_id(), "moon_center"),
                     lx / len * D, ly / len * D, lz / len * D);
-        glUniform1f(glGetUniformLocation(sun->get_program_id(), "sun_size"),
+        glUniform1f(glGetUniformLocation(moon->get_program_id(), "moon_size"),
                     400.0f);
-        glUniform3f(glGetUniformLocation(sun->get_program_id(), "sun_color"),
+        glUniform3f(glGetUniformLocation(moon->get_program_id(), "moon_color"),
                     1.0f, 1.f, 1.f);
 
         glEnable(GL_BLEND);
@@ -240,7 +240,7 @@ int main(int argc, char* argv[])
                     GL_ONE_MINUS_SRC_ALPHA); // GL_ONE, GL_ONE pour un halo plus
                                              // "additif"
         glDepthMask(GL_FALSE); // n'écrit pas la profondeur
-        glBindVertexArray(sun_vao);
+        glBindVertexArray(moon_vao);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);

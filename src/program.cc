@@ -111,7 +111,7 @@ void Program::init_POV()
     // Get the light direction
     GLint light_loc = glGetUniformLocation(get_program_id(), "light_dir");
     TEST_OPENGL_ERROR();
-    if (light_loc == -1)
+    if (light_loc != -1)
     {
         glUniform3f(light_loc, 1.0f, 1.0f, 1.0f);
     }
