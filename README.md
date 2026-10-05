@@ -1,93 +1,150 @@
-# pogl
+# opengl-npr-renderer
 
+Non-photorealistic real-time renderer. C++20, OpenGL 4.1 core, GLFW, GLEW.
+Toon shading with procedural hatching, outlines from inflated back faces, and an
+instanced particle system for fire.
 
+<!-- Captures go here once recorded:
+![Toon-shaded forest](docs/forest.png)
+![Fire particle system](docs/fire.gif)
+-->
 
-## Getting started
+## How a frame is drawn
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Four passes over the scene, in this order:
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+1. **Outlines.** The meshes are drawn with vertices pushed outwards along their
+   normals and front-face culling enabled, so only the inflated back faces reach
+   the screen.
+2. **Shading.** The same meshes again, culled normally and textured, with the
+   toon lighting and the hatching done in the fragment shader. This overdraws
+   the interior of the previous pass and leaves only a contour.
+3. **Particles**, when enabled. Instanced camera-facing quads, alpha blended,
+   with depth writes turned off so overlapping particles accumulate instead of
+   occluding each other.
+4. **Moon.** One blended quad, also with depth writes off.
 
-## Add your files
+## Techniques
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+**Toon shading.** The diffuse term is quantized into discrete bands, and each
+band selects a blend between a cool ambient and a warm key light. The result
+reads as flat painted regions instead of a gradient.
+
+**Procedural hatching.** Stroke lines are generated in the fragment shader from
+a world-space pattern, broken up by a per-cell hash so they do not form
+continuous stripes, and scaled by how dark the surface already is. No hatching
+texture and nothing authored by hand.
+
+**Outlines from inflated back faces.** No edge detection and no extra
+framebuffer. The whole cost is one additional draw of the scene, and the contour
+keeps a constant width without any screen-space work.
+
+**Instanced billboards.** A single quad lives in the vertex buffer. Each
+particle is an instance, feeding position, size and a packed color through
+per-instance attributes. The quad is turned towards the camera by reading the
+right and up vectors straight out of the model-view matrix in the vertex shader,
+so no per-particle matrix is ever built or uploaded.
+
+**Particle pool.** Fixed size, recycled by index, so nothing is allocated at
+runtime once it is up. The streamed vertex buffers are orphaned before each
+upload to avoid stalling while the GPU is still reading the previous frame.
+
+**Fire.** Particles spawn over a disc, rise with jittered velocity, lose
+horizontal momentum to drag, shrink, and shift from yellow to red as they age.
+Its shader program is only compiled the first time the effect is switched on.
+
+**Moon.** A distant quad whose disc and halo come from radial falloffs in the
+fragment shader, fully discarded outside the glow.
+
+**Loading.** OBJ and MTL through tinyobjloader, images through `stb_image`.
+Textures are cached by path, and materials without a map fall back to a plain
+white one.
+
+## Building
+
+Arch:
+
+```sh
+yay -S base-devel glfw glew pkgconf
+```
+
+Debian:
+
+```sh
+sudo apt install build-essential libglfw3-dev libglew-dev pkg-config
+```
+
+macOS:
+
+```sh
+brew install glfw glew
+```
+
+Then:
+
+```sh
+make
+```
+
+## Running
+
+The forest mesh is a 214 MB ASCII OBJ, too big to version, so it lives in the
+releases. Fetch it once:
+
+```sh
+make assets
+```
+
+Build and launch:
+
+```sh
+make run
+```
+
+Any other OBJ works too:
+
+```sh
+./main objects/cylinder.obj
+```
+
+### Controls
+
+| Input           | Action          |
+| --------------- | --------------- |
+| Mouse           | Look            |
+| `W` `A` `S` `D` | Move            |
+| `Space`         | Up              |
+| `Left Shift`    | Down            |
+| `N`             | Toggle the fire |
+| `Escape`        | Quit            |
+
+## Layout
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.cri.epita.fr/axel.gil/pogl.git
-git branch -M main
-git push -uf origin main
+main.cc      render loop and the draw passes
+src/         camera, shader programs, particles, math, OBJ and image loading
+shaders/     color (bands + hatching), outline, fire, moon
+objects/     meshes and materials
+textures/    diffuse maps referenced by the materials
 ```
 
-## Integrate with your tools
+## Credits
 
-* [Set up project integrations](https://gitlab.cri.epita.fr/axel.gil/pogl/-/settings/integrations)
+The scene is "Free Low Poly Forest" by
+[purepoly](https://sketchfab.com/purepoly), under
+[CC-BY-4.0](http://creativecommons.org/licenses/by/4.0/). Required attribution:
 
-## Collaborate with your team
+> This work is based on
+> ["Free Low Poly Forest"](https://sketchfab.com/3d-models/free-low-poly-forest-6dc8c85121234cb59dbd53a673fa2b8f)
+> by [purepoly](https://sketchfab.com/purepoly) licensed under
+> [CC-BY-4.0](http://creativecommons.org/licenses/by/4.0/)
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+Full text in [ASSETS-LICENSE.txt](ASSETS-LICENSE.txt). Third-party code:
+[tinyobjloader](https://github.com/tinyobjloader/tinyobjloader),
+[stb_image](https://github.com/nothings/stb).
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Code under the [MIT License](LICENSE). Assets keep their own, see above.
+
+Built for a graphics programming course at EPITA.

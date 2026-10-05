@@ -61,5 +61,29 @@ all: main
 
 main: $(OBJ)
 
+# The forest mesh is a 213 MB ASCII OBJ, too large to version. It is published
+# as a release asset (gzipped, ~54 MB) and fetched on demand.
+GH_REPO   ?= axel-gil/opengl-npr-renderer
+ASSET_TAG ?= v1.0
+SCENE     := objects/scene.obj
+SCENE_URL := https://github.com/$(GH_REPO)/releases/download/$(ASSET_TAG)/scene.obj.gz
+
+assets: $(SCENE)
+
+$(SCENE):
+	@echo "==> Fetching scene mesh (~54 MB compressed)"
+	@curl -fL --progress-bar "$(SCENE_URL)" -o $(SCENE).gz
+	@gunzip -f $(SCENE).gz
+	@echo "==> Scene ready: $(SCENE)"
+
+run: main $(SCENE)
+	./main $(SCENE)
+
 clean:
 	$(RM) $(OBJ) main
+
+# Removes the downloaded scene as well
+distclean: clean
+	$(RM) $(SCENE) $(SCENE).gz
+
+.PHONY: all assets run clean distclean

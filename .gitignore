@@ -1,12 +1,19 @@
-**.tga
-**.swp
-**.o
-**a.out
-**main
+# Build artifacts
+*.o
+*.tga
+a.out
+main
 main.dSYM/
 compile_commands.json
-**bin
-license.txt
-textures/*.png
-textures/*.jpeg
-textures/*.jpg
+.cache/
+
+# Editor
+*.swp
+
+# Scene mesh: 213 MB, shipped as a release asset instead (see `make assets`)
+objects/scene.obj
+objects/scene.obj.gz
+
+# Only the textures actually referenced by the .mtl files are versioned
+textures/*
+!textures/PP_Standard_Material_*.png
